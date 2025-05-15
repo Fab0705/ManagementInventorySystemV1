@@ -1,4 +1,32 @@
 import React from 'react'
+import Button from '../components/Buttons/Button'
+import ButtonAction from '../components/Buttons/ButtonAction'
+import { BiTransfer } from "react-icons/bi";
+import Table from '../components/Table/Table';
+
+const theadText = ['Origin', 'Destiny', 'Date', 'Status', 'Action'];
+const tbodyData = [
+  {
+    origin: 'Almacén Lima',
+    destiny: 'Almacén Huacho',
+    date: '03/05/2025',
+  },
+  {
+    origin: 'Almacén Lima',
+    destiny: 'Almacén Huacho',
+    date: '08/05/2025',
+  }
+]
+
+const renderTransferRow = (item, index) => (
+  <tr key={index} className="border-b h-9 hover:bg-gray-50">
+    <td>{item.origin}</td>
+    <td>{item.destiny}</td>
+    <td>{item.date}</td>
+    <td><span className="text-yellow-600">En tránsito</span></td>
+    <td><ButtonAction primaryColor={"bg-indigo-600"} hoverColor={"hover:bg-indigo-700"} icon={BiTransfer} /></td>
+  </tr>
+);
 
 export default function Transfers() {
   return (
@@ -7,30 +35,11 @@ export default function Transfers() {
 
       <div className="flex justify-between items-center mb-4">
         <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar transferencia..." />
-        <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Nueva Transferencia</button>
+        <Button children={"New Transfer"} onclick={() => alert("Transferencia agregado (prueba)")} primaryColor={"bg-purple-600"} hoverColor={"hover:bg-purple-700"} />
       </div>
 
       <div className="bg-white rounded-xl shadow p-4 overflow-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-gray-600 border-b">
-            <tr>
-              <th>Origen</th>
-              <th>Destino</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b hover:bg-gray-50">
-              <td>Almacén Lima</td>
-              <td>Arequipa</td>
-              <td>03/05/2025</td>
-              <td><span className="text-yellow-600">En tránsito</span></td>
-              <td><button className="text-blue-600 hover:underline">Detalles</button></td>
-            </tr>
-          </tbody>
-        </table>
+        <Table theadText={theadText} tbodyData={tbodyData} renderRow={renderTransferRow} />
       </div>
     </div>
   )
