@@ -4,8 +4,8 @@ import ButtonAction from '../components/Buttons/ButtonAction';
 import { FaEye } from "react-icons/fa";
 import Table from '../components/Table/Table';
 
-const theadText = ['Client', 'Date', 'Total', 'Status', 'Action'];
-const tbodyData = [
+const theadText = ['WO', 'Description', 'Date', 'Status', 'Action'];
+/* const tbodyData = [
   {
     client: 'Juan Pérez',
     date: '04/05/2025',
@@ -16,11 +16,11 @@ const tbodyData = [
     date: '09/05/2025',
     total: '$ 1000.00'
   }
-]
+] */
 
 const renderOrderRow = (item, index) => (
   <tr key={index} className="border-b h-9 hover:bg-gray-50">
-    <td>{item.client}</td>
+    <td>{item.idclient}</td>
     <td>{item.date}</td>
     <td>{item.total}</td>
     <td><span className="text-green-600">Entregado</span></td>
