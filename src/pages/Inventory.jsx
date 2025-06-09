@@ -3,7 +3,7 @@ import Button from '../components/Buttons/Button';
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { MdModeEditOutline } from "react-icons/md";
 import Table from '../components/Table/Table';
-import { getSpareParts } from '../services/sparePartService';
+import { getAllSpareParts } from '../services/sparePartService';
 
 const theadText = ['Number Part', 'Description', 'Rework', 'Stock Locations', 'Action'];
 
@@ -38,8 +38,8 @@ export default function Inventory() {
   useEffect(() => {
     const fetchSpareParts = async () => {
       try {
-        const response = await getSpareParts();
-        setSpareParts(response.data); // asignar los datos al estado
+        const data = await getAllSpareParts();
+        setSpareParts(Array.isArray(data) ? data : []); // asignar los datos al estado
       } catch (error) {
         console.error('Error fetching spare parts:', error);
       } finally {
