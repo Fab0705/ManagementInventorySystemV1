@@ -67,3 +67,15 @@ export const deleteSparePart = async (id) => {
     throw error;
   }
 };
+
+export const fetchMatchingParts = async (query) => {
+  try
+  {
+    const res = await fetch(`${API_URL}/search?query=${query}`);
+    const data = await res.json();
+    return data; // puedes usar esto para autocomplete
+  } catch (error) {
+    console.error(`Error al buscar el repuesto con numero ${query}:`, error);
+    throw error;
+  }
+};
