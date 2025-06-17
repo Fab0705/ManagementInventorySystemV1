@@ -11,6 +11,7 @@ import Transfers from './pages/Transfers'
 import Purchases from './pages/Purchases'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
 //import './App.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
 
   return (
     <Router>
+      {/* <Login /> */}
       <div className='flex h-screen'>
         <AsideBar />
         <div className='flex flex-col flex-1'>
