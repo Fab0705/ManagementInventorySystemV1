@@ -7,6 +7,7 @@ import Modal from '../components/Modals/Modal';
 import { getTransfers, createTransfer, updateTransferStatus, getTransferById } from '../services/transferService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
+import { useAuth } from '../context/AuthContext';
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import { span, td, tr } from 'framer-motion/client';
 import TableDetails from '../components/Table/TableDetails';
@@ -26,6 +27,8 @@ export default function Transfers() {
   const [selectedTransfer, setSelectedTransfer] = useState(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
+
+  const { userData } = useAuth();
 
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
@@ -53,8 +56,13 @@ export default function Transfers() {
         ]);
 
         setTransfers(Array.isArray(transferData) ? transferData : []);
-        setRegions(regionData);
         setLocations(locationData);
+
+        const userLocation = locationData.find(loc => loc.idLoc === userData?.locId);
+        const userRegionId = userLocation?.idReg;
+
+        const filteredRegions = regionData.filter(reg => reg.idReg !== userRegionId);
+        setRegions(filteredRegions);
       } catch (error) {
         console.error('Error al cargar datos:', error);
       } finally {
@@ -91,8 +99,8 @@ export default function Transfers() {
     try {
       if (isCreateMode) {
         const payload = {
-          originId: filteredLocations[0]?.idLoc, // ← deberías cambiar esto según lo que selecciones
-          destinyId: filteredLocations[1]?.idLoc, // ← igual, deberías hacer select para destino
+          originId: userData?.locId, // ← deberías cambiar esto según lo que selecciones
+          destinyId: filteredLocations[0]?.idLoc, // ← igual, deberías hacer select para destino
           statusTransf: 'Pendiente',
           detailTransfers: spareParts
         };
