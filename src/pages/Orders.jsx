@@ -5,6 +5,7 @@ import { FaEye } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus} from '../services/orderService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { fetchMatchingParts } from '../services/sparePartService';
+import { useAuth } from '../context/AuthContext';
 import TableDetails from '../components/Table/TableDetails';
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import Modal from '../components/Modals/Modal';
@@ -21,6 +22,8 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
+
+  const { userData } = useAuth();
 
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
@@ -73,7 +76,7 @@ export default function Orders() {
         const payload = {
           workOrd: 'WO00001122',
           descOrd: 'wawa',// ← deberías cambiar esto según lo que selecciones
-          idLoc: 'L0001', // ← igual, deberías hacer select para destino
+          idLoc: userData?.locId, // ← igual, deberías hacer select para destino
           statusTransf: 'Pendiente',
           detailOrders: spareParts
         };
