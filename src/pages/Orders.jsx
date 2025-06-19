@@ -2,41 +2,41 @@ import React, { useEffect, useState } from 'react';
 import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { FaEye } from "react-icons/fa";
+import { getOrders, getOrderById, createOrder, updateOrderStatus} from '../services/orderService';
+import { getAllRegions, getAllLocations } from '../services/dataService';
+import { fetchMatchingParts } from '../services/sparePartService';
+import TableDetails from '../components/Table/TableDetails';
+import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
+import Modal from '../components/Modals/Modal';
 import Table from '../components/Table/Table';
-import { getOrders } from '../services/orderService';
 
 const theadText = ['WO', 'Description', 'Date', 'Status', 'Action'];
-
-const renderOrderRow = (item, index) => (
-  <tr key={index} className="border-b h-9 hover:bg-gray-50">
-    <td>{item.workOrd}</td>
-    <td>{item.descOrd}</td>
-    <td>{new Date(item.dateOrd).toLocaleString('es-PE', { 
-      day: '2-digit', month: '2-digit', year: 'numeric', 
-      hour: '2-digit', minute: '2-digit' 
-    })}</td>
-    <td>
-      <span className={
-        item.statusOrd === 'Pendiente' ? 'text-yellow-600' :
-        item.statusOrd === 'Entregado' ? 'text-green-600' :
-        'text-gray-600'
-      }>
-        {item.statusOrd}
-      </span>
-    </td>
-    <td>
-      <ButtonAction
-        primaryColor={"bg-green-600"}
-        hoverColor={"hover:bg-green-700"}
-        icon={FaEye}
-      />
-    </td>
-  </tr>
-);
+const theadText_sparePart = ['Number Part', 'Description', 'Quantity'];
+const theadText_order = ['Work Order', 'Description'];
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [spareParts, setSpareParts] = useState([]);
+
+  const handleSparePartChange = (index, field, value) => {
+    const updated = [...spareParts];
+    updated[index][field] = value;
+    setSpareParts(updated);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+
+    if(isCreateMode)
+    {
+      setSelectedRegionId("");
+      setSpareParts([]);
+    }
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -53,27 +53,218 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  return (
-    <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-      <h1 className="text-xl font-bold mb-6">Orders</h1>
+  const openEditModal = async (order) => {
+    const data = await getOrderById(order.idOrd);
+    console.log('Datos cargados para edición:', data); // ✅ verifica esto
+    setSelectedOrder(data);
+    setIsCreateMode(false);
+    setModalOpen(true);
+  };
 
-      <div className="flex justify-between items-center mb-4">
-        <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar orden o cliente..." />
-        <Button 
-          children={"New Order"} 
-          onclick={() => alert("Orden agregado (prueba)")} 
-          primaryColor={"bg-green-600"} 
-          hoverColor={"hover:bg-green-700"} 
+  const openCreateModal = () => {
+    setSelectedOrder(null);
+    setIsCreateMode(true);
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (isCreateMode) {
+        const payload = {
+          workOrd: 'WO00001122',
+          descOrd: 'wawa',// ← deberías cambiar esto según lo que selecciones
+          idLoc: 'L0001', // ← igual, deberías hacer select para destino
+          statusTransf: 'Pendiente',
+          detailOrders: spareParts
+        };
+
+        await createOrder(payload);
+      } else {
+        await updateOrderStatus(selectedOrder.idOrd);
+      }
+
+      setModalOpen(false);
+      const updatedTransfers = await getTransfers();
+      setTransfers(updatedTransfers);
+    } catch (error) {
+      console.error('Error al enviar la transferencia:', error);
+    }
+  };
+
+  const renderOrderRow = (item, index) => (
+    <tr key={index} className="border-b h-9 hover:bg-gray-50">
+      <td>{item.workOrd}</td>
+      <td>{item.descOrd}</td>
+      <td>{new Date(item.dateOrd).toLocaleString('es-PE', { 
+        day: '2-digit', month: '2-digit', year: 'numeric', 
+        hour: '2-digit', minute: '2-digit' 
+      })}</td>
+      <td>
+        <span className={
+          item.statusOrd === 'Pendiente' ? 'text-yellow-600' :
+          item.statusOrd === 'Entregado' ? 'text-green-600' :
+          'text-gray-600'
+        }>
+          {item.statusOrd}
+        </span>
+      </td>
+      <td>
+        <ButtonAction
+          primaryColor={"bg-green-600"}
+          hoverColor={"hover:bg-green-700"}
+          icon={FaEye}
+          onclick={() => openEditModal(item)}
         />
-      </div>
+      </td>
+    </tr>
+  );
 
-      <div className="bg-white rounded-xl shadow p-4 overflow-auto">
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <Table theadText={theadText} tbodyData={orders} renderRow={renderOrderRow} />
-        )}
+  const renderSparePartsRow = (item, index) => (
+    <tr key={index} className='border-b h-9 hover:bg-gray-50 text-center'>
+      <td>{item.numberPart}</td>
+      <td>{item.descPart}</td>
+      <td>{item.quantity}</td>
+    </tr>
+  );
+
+  return (
+    <>
+      <Modal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        title={isCreateMode ? "Nueva Orden" : "Detalles de la Orden"}
+      >
+        <div className="space-y-3">
+          
+          {isCreateMode && (
+            <>
+              <hr />
+              <h3 className='font-bold italic mb-1'>Almacen a transferir</h3>
+              
+              <hr />
+              <h3 className='font-bold italic mb-2'>Repuestos a transferir</h3>
+              <SearchBar_Modal
+                fetchData={fetchMatchingParts}
+                onResultSelect={(item) => {
+                  setSpareParts(prev => [...prev, { idSpare: item.idSpare, numPart: item.numberPart, quantity: 1 }]);
+                }}
+                renderResultItem={(item) => (
+                  <div>
+                    {item.numberPart} - <span className="text-sm text-gray-500">{item.descPart}</span>
+                  </div>
+                )}
+                placeholder="Buscar número de parte..."
+              />
+
+              <div className="mt-4">
+                <Table
+                  theadText={["N° Parte", "Cantidad", "Acciones"]}
+                  tbodyData={spareParts}
+                  renderRow={(sp, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="py-2 px-3">{sp.idSpare} - {sp.numPart}</td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="number"
+                          min="1"
+                          value={sp.quantity}
+                          onChange={(e) =>
+                            handleSparePartChange(index, 'quantity', parseInt(e.target.value))
+                          }
+                          className="w-20 border px-2 py-1 rounded"
+                        />
+                      </td>
+                      <td className="py-2 px-3">
+                        <button
+                          onClick={() => {
+                            const updated = [...spareParts];
+                            updated.splice(index, 1);
+                            setSpareParts(updated);
+                          }}
+                          className="text-red-500 hover:underline"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                />
+              </div>
+
+              <button
+                    onClick={handleSubmit}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                  >
+                    {isCreateMode ? 'Registrar' : 'Actualizar'}
+                  </button>
+            </>
+          )}
+          {!isCreateMode && (
+            <>
+              <hr />
+              <span className='flex flex-row justify-between'>
+                  <p><strong>Fecha realizada la Orden:</strong></p>
+                  {selectedOrder?.dateOrd &&
+                      new Date(selectedOrder.dateOrd).toLocaleString('es-PE', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                  })}
+              </span>
+              <h3 className='font-bold text-center italic mb-1'>Descripción</h3>
+              <TableDetails theadText={theadText_order}>
+                <tr className='border-b h-9 hover:bg-gray-50 text-center'>
+                  <td>{selectedOrder?.workOrd}</td>
+                  <td>{selectedOrder?.descOrd}</td>
+                </tr>
+              </TableDetails>
+              <h3 className='font-bold text-center italic mb-1'>Repuestos solicitados</h3>
+              <TableDetails
+                theadText={theadText_sparePart}
+                tbodyData={selectedOrder?.spareParts || []}
+                renderRow={renderSparePartsRow}
+              />
+
+              <hr />
+              
+              {selectedOrder?.statusTransf === "Completada"
+                ? <span className="items-center text-sm text-gray-400 italic">La orden ha sido completada</span>
+                : <button
+                    onClick={handleSubmit}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                  >
+                    {isCreateMode ? 'Registrar' : 'Actualizar'}
+                  </button>
+              }
+              
+            </>
+          )}
+        </div>
+      </Modal>
+
+      <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
+        <h1 className="text-xl font-bold mb-6">Orders</h1>
+
+        <div className="flex justify-between items-center mb-4">
+          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar orden o cliente..." />
+          <Button 
+            children={"New Order"} 
+            onclick={openCreateModal} 
+            primaryColor={"bg-green-600"} 
+            hoverColor={"hover:bg-green-700"} 
+          />
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-4 overflow-auto">
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            <Table theadText={theadText} tbodyData={orders} renderRow={renderOrderRow} />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
