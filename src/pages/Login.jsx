@@ -1,9 +1,46 @@
-import React from 'react'
-import SocialButton from '../components/Buttons/SocialButton'
-import InputField from '../components/Buttons/InputField'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SocialButton from '../components/Buttons/SocialButton';
+import InputField from '../components/Buttons/InputField';
+import { loginAuth } from '../services/userService';
+import { useAuth } from '../context/AuthContext';
 import { FaGoogle, FaApple } from 'react-icons/fa';
 
-export default function Login() {
+export default function Login({  }) {
+  const [user, setUser] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const loginData = { Username: user, Password: password };
+    
+
+    try {
+      const res = await loginAuth(loginData);
+
+      /* if (res.success) {
+        login();
+        navigate('/');
+      } else {
+        setError(res.error);
+      } */
+
+      if (res.success && res.data) {
+        login(res.data); // Aquí se pasa el objeto con los datos del usuario
+        navigate('/');
+      } else {
+        setError(res.data);
+      }
+    } catch (err) {
+      setError('Error en el servidor');
+    }
+  };
+
+
   return (
     <div className="flex h-screen bg-gradient-to-r from-green-100-100 to-green-300">
         {/* Left side - Login */}
@@ -25,9 +62,9 @@ export default function Login() {
           </div> */}
 
           {/* Form */}
-          <form className="space-y-4">
-            <InputField label="Email" type="email" placeholder="Enter your email" />
-            <InputField label="Password" type="password" placeholder="Enter your password" />
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <InputField label="Username" type="text" placeholder="Enter your username" maxlength="20" value={user} onChange={(e) => setUser(e.target.value)} />
+            <InputField label="Password" type="password" placeholder="Enter your password" maxlength="30" value={password} onChange={(e) => setPassword(e.target.value)} />
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2">
@@ -36,6 +73,8 @@ export default function Login() {
               </label>
               <a href="#" className="text-black font-medium">Forgot Password?</a>
             </div>
+            
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <button className="w-full bg-black text-white py-2 rounded-xl hover:opacity-90 transition">Login</button>
           </form>

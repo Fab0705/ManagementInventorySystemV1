@@ -13,13 +13,11 @@ export const getUsers = async () => {
   }
 };
 
-// Realizar Login
-export const loginAuth = async (transferData) => {
+export const loginAuth = async (loginData) => {
   try {
-    const response = await axios.post(API_URL, transferData);
-    return response.data;
+    const response = await axios.post(`${API_URL}/login`, loginData);
+    return { success: true, data: response.data };
   } catch (error) {
-    console.error('Error al iniciar sesion:', error);
-    throw error;
+    return { success: false, error: error.response?.data?.message || 'Error desconocido' };
   }
 };
