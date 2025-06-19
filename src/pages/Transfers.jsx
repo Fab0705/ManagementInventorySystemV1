@@ -76,7 +76,6 @@ export default function Transfers() {
 
   const openEditModal = async (transfer) => {
     const data = await getTransferById(transfer.idTransf);
-    console.log('Datos cargados para edición:', data); // ✅ verifica esto
     setSelectedTransfer(data);
     setIsCreateMode(false);
     setModalOpen(true);
@@ -157,7 +156,7 @@ export default function Transfers() {
           {isCreateMode && (
             <>
               <hr />
-              <h3 className='font-bold italic mb-1'>Almacen a transferir</h3>
+              <h3 className='font-bold text-center italic mb-1'>Almacen a transferir</h3>
               <div className="flex flex-row gap-3 mb-5">
                 <select
                   className="w-1/3 border mt-2 px-3 py-2 rounded"
@@ -185,7 +184,7 @@ export default function Transfers() {
                 </div>
               </div>
               <hr />
-              <h3 className='font-bold italic mb-2'>Repuestos a transferir</h3>
+              <h3 className='font-bold text-center italic mb-2'>Repuestos a transferir</h3>
               <SearchBar_Modal
                 fetchData={fetchMatchingParts}
                 onResultSelect={(item) => {
@@ -269,14 +268,14 @@ export default function Transfers() {
                     })}
                 </span>
               </div>
-              
+              <h3 className='font-bold text-center italic mb-1'>Almacenes involucrados</h3>
               <TableDetails theadText={theadText_storage}>
                 <tr className='border-b h-9 hover:bg-gray-50 text-center'>
                   <td>{selectedTransfer?.origin?.nameSt} - {selectedTransfer?.origin?.region}</td>
                   <td>{selectedTransfer?.destiny?.nameSt} - {selectedTransfer?.destiny?.region}</td>
                 </tr>
               </TableDetails>
-              
+              <h3 className='font-bold text-center italic mb-1'>Repuestos transferidos</h3>
               <TableDetails
                 theadText={theadText_sparePart}
                 tbodyData={selectedTransfer?.spareParts || []}
@@ -286,7 +285,7 @@ export default function Transfers() {
               <hr />
               
               {selectedTransfer?.statusTransf === "Completada"
-                ? <span className="items-center text-sm text-gray-400 italic">La transferencia ha sido completada</span>
+                ? <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
                 : <button
                     onClick={handleSubmit}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
