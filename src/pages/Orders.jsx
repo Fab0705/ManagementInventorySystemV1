@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaTrash } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus} from '../services/orderService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { fetchMatchingParts } from '../services/sparePartService';
@@ -22,6 +22,9 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
+  const [orderNumberDigits, setOrderNumberDigits] = useState('');
+  const [orderDescription, setOrderDescription] = useState('');
+  const [errors, setErrors] = useState({ digits: '', description: '', spareParts: ''});
 
   const { userData } = useAuth();
 
@@ -36,7 +39,9 @@ export default function Orders() {
 
     if(isCreateMode)
     {
-      setSelectedRegionId("");
+      setErrors({ digits: '', description: '', spareParts: ''});
+      setOrderNumberDigits('');
+      setOrderDescription('');
       setSpareParts([]);
     }
   };
@@ -71,13 +76,37 @@ export default function Orders() {
   };
 
   const handleSubmit = async () => {
+    const newErrors = { digits: '', description: '', spareParts: '' };
+    let isValid = true;
+
+    if (orderNumberDigits.length !== 9) {
+      newErrors.digits = 'Debe tener exactamente 9 dígitos numéricos.';
+      isValid = false;
+    }
+
+    if (!orderDescription.trim()) {
+      newErrors.description = 'La descripción es obligatoria.';
+      isValid = false;
+    }
+
+    if (spareParts.length < 1) {
+      newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
+
     try {
       if (isCreateMode) {
+        const fullOrderCode = `W${orderNumberDigits}`;
+
         const payload = {
-          workOrd: 'WO00001122',
-          descOrd: 'wawa',// ← deberías cambiar esto según lo que selecciones
+          workOrd: fullOrderCode,
+          descOrd: orderDescription,// ← deberías cambiar esto según lo que selecciones
           idLoc: userData?.locId, // ← igual, deberías hacer select para destino
-          statusTransf: 'Pendiente',
+          statusOrd: 'Pendiente',
           detailOrders: spareParts
         };
 
@@ -87,8 +116,8 @@ export default function Orders() {
       }
 
       setModalOpen(false);
-      const updatedTransfers = await getTransfers();
-      setTransfers(updatedTransfers);
+      const updateOrders = await getOrders();
+      setTransfers(updateOrders);
     } catch (error) {
       console.error('Error al enviar la transferencia:', error);
     }
@@ -142,8 +171,43 @@ export default function Orders() {
           {isCreateMode && (
             <>
               <hr />
-              <h3 className='font-bold italic mb-1'>Almacen a transferir</h3>
-              
+              <h3 className='font-bold italic mb-1'>Ingresar Work Order</h3>
+              <div className="flex gap-2 items-center mb-1">
+                <input
+                  value="W"
+                  disabled
+                  className="w-10 px-3 py-2 border rounded bg-gray-100 text-center font-bold"
+                />
+                <input
+                  type="text"
+                  maxLength={9}
+                  value={orderNumberDigits}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) setOrderNumberDigits(val); // solo números
+                  }}
+                  placeholder="9 dígitos numéricos"
+                  className={`flex-1 px-3 py-2 border rounded ${errors.digits && 'border-red-500'}`}
+                />
+              </div>
+
+              {errors.digits && <p className="text-sm text-red-500 mb-2">{errors.digits}</p>}
+
+              <h3 className='font-bold italic mb-1'>Describir orden</h3>
+              <textarea
+                maxLength={200}
+                value={orderDescription}
+                onChange={(e) => setOrderDescription(e.target.value)}
+                rows={3}
+                placeholder="Describe brevemente esta orden (máx. 200 caracteres)"
+                className={`w-full px-3 py-2 border rounded ${errors.description && 'border-red-500'}`}
+              />
+              <div className="text-sm text-right text-gray-500 mb-1">
+                {orderDescription.length}/200 caracteres
+              </div>
+
+              {errors.description && <p className="text-sm text-red-500 mb-2">{errors.description}</p>}
+
               <hr />
               <h3 className='font-bold italic mb-2'>Repuestos a transferir</h3>
               <SearchBar_Modal
@@ -184,16 +248,18 @@ export default function Orders() {
                             updated.splice(index, 1);
                             setSpareParts(updated);
                           }}
-                          className="text-red-500 hover:underline"
+                          className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
                         >
-                          Eliminar
+                          <FaTrash />
                         </button>
                       </td>
                     </tr>
                   )}
                 />
               </div>
-
+              {errors.spareParts && (
+                <p className="text-sm text-red-500 mt-1">{errors.spareParts}</p>
+              )}
               <button
                     onClick={handleSubmit}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"

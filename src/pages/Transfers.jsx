@@ -8,6 +8,7 @@ import { getTransfers, createTransfer, updateTransferStatus, getTransferById } f
 import { fetchMatchingParts } from '../services/sparePartService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { useAuth } from '../context/AuthContext';
+import { FaTrash } from "react-icons/fa";
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import { span, td, tr } from 'framer-motion/client';
 import TableDetails from '../components/Table/TableDetails';
@@ -27,6 +28,7 @@ export default function Transfers() {
   const [selectedTransfer, setSelectedTransfer] = useState(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
+  const [errors, setErrors] = useState({ locReg: '', spareParts: ''});
 
   const { userData } = useAuth();
 
@@ -41,6 +43,7 @@ export default function Transfers() {
 
     if(isCreateMode)
     {
+      setErrors({ locReg: '', spareParts: '' });
       setSelectedRegionId("");
       setSpareParts([]);
     }
@@ -96,11 +99,28 @@ export default function Transfers() {
   };
 
   const handleSubmit = async () => {
+    const newErrors = {locReg: '', spareParts: ''}
+    let isValid = true;
+
+    if (!selectedRegionId) {
+      newErrors.locReg = 'Debe seleccionar una región.';
+      isValid = false;
+    }
+
+    if (spareParts.length < 1) {
+      newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
+
     try {
       if (isCreateMode) {
         const payload = {
-          originId: userData?.locId, // ← deberías cambiar esto según lo que selecciones
-          destinyId: filteredLocations[0]?.idLoc, // ← igual, deberías hacer select para destino
+          originId: userData?.locId,
+          destinyId: filteredLocations[0]?.idLoc,
           statusTransf: 'Pendiente',
           detailTransfers: spareParts
         };
@@ -123,7 +143,18 @@ export default function Transfers() {
       <td>{item.originLocation?.nameSt}</td>
       <td>{item.destinyLocation?.nameSt}</td>
       <td>{new Date(item.dateTransf).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-      <td>{new Date(item.arrivalDate).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+      <td>
+        {item.arrivalDate
+          ? new Date(item.arrivalDate).toLocaleString('es-PE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : <span className="text-sm text-gray-400 italic">Aún no llega a su destino</span>
+        }
+      </td>
       <td>
         <span className={
           item.statusTransf === 'Completada'
@@ -178,7 +209,6 @@ export default function Transfers() {
                     </option>
                   ))}
                 </select>
-
                 <div className="w-2/3 mt-2 px-3 py-2 border rounded bg-gray-50 text-sm text-gray-700">
                   {selectedRegionId
                     ? filteredLocations.length > 0
@@ -191,6 +221,9 @@ export default function Transfers() {
                     : "Selecciona una región para ver su ubicación"}
                 </div>
               </div>
+              {errors.locReg && (
+                  <p className="text-sm text-red-500 mt-1">{errors.locReg}</p>
+                )}
               <hr />
               <h3 className='font-bold text-center italic mb-2'>Repuestos a transferir</h3>
               <SearchBar_Modal
@@ -231,16 +264,18 @@ export default function Transfers() {
                             updated.splice(index, 1);
                             setSpareParts(updated);
                           }}
-                          className="text-red-500 hover:underline"
+                          className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
                         >
-                          Eliminar
+                          <FaTrash />
                         </button>
                       </td>
                     </tr>
                   )}
                 />
               </div>
-
+              {errors.spareParts && (
+                <p className="text-sm text-red-500 mt-1">{errors.spareParts}</p>
+              )}
               <button
                     onClick={handleSubmit}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
@@ -266,14 +301,14 @@ export default function Transfers() {
                 </span>
                 <span>
                   <p><strong>Día de llegada:</strong></p>
-                  {selectedTransfer?.arrivalDate &&
+                  {selectedTransfer?.arrivalDate ?
                     new Date(selectedTransfer.dateTransf).toLocaleString('es-PE', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
-                    })}
+                    }) : <span className="text-sm text-gray-400 italic">Aún no llega a su destino</span>}
                 </span>
               </div>
               <h3 className='font-bold text-center italic mb-1'>Almacenes involucrados</h3>
