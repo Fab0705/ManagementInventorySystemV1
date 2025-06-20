@@ -3,7 +3,6 @@ import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { FaEye, FaTrash } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus} from '../services/orderService';
-import { getAllRegions, getAllLocations } from '../services/dataService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { useAuth } from '../context/AuthContext';
 import TableDetails from '../components/Table/TableDetails';
@@ -62,8 +61,7 @@ export default function Orders() {
   }, []);
 
   const openEditModal = async (order) => {
-    const data = await getOrderById(order.idOrd);
-    console.log('Datos cargados para edición:', data); // ✅ verifica esto
+    const data = await getOrderById(order.idOrd);    
     setSelectedOrder(data);
     setIsCreateMode(false);
     setModalOpen(true);
@@ -314,7 +312,7 @@ export default function Orders() {
       </Modal>
 
       <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-        <h1 className="text-xl font-bold mb-6">Orders</h1>
+        <h1 className="text-xl font-bold mb-6">Órdenes</h1>
 
         <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar orden o cliente..." />

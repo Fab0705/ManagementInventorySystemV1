@@ -342,7 +342,7 @@ export default function Transfers() {
         </div>
       </Modal>
       <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-        <h1 className="text-xl font-bold mb-6">Transfers</h1>
+        <h1 className="text-xl font-bold mb-6">Transferencias</h1>
 
         <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar transferencia..." />
