@@ -20,7 +20,7 @@ export default function AsideBar() {
 
   return (
     <aside className='h-dvh w-1/7 shadow-xl'>
-        <h2 className='h-12 text-center content-center'>Inventory System</h2>
+        <h2 className='h-12 text-center content-center'>IDERKA</h2>
         <ul className='px-8'>
             {itemsDesc.map((desc, index) => {
               const isActive = location.pathname === routes[index];
