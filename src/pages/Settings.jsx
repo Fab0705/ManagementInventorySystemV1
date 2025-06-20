@@ -1,6 +1,9 @@
 import React from 'react'
+import { useAuth } from '../context/AuthContext';
 
 export default function Settings() {
+  const { userData } = useAuth();
+
   return (
     <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
       <h1 className="text-xl font-bold mb-6">Settings</h1>
@@ -41,15 +44,15 @@ export default function Settings() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span>Nombre de usuario</span>
-              <span className="text-gray-600">admin123</span>
+              <span className="text-gray-600">{userData?.username}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>Email</span>
-              <span className="text-gray-600">admin@mail.com</span>
+              <span className="text-gray-600">{userData?.emails}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>Rol</span>
-              <span className="text-gray-600">Administrador</span>
+              <span className="text-gray-600">{userData?.roles}</span>
             </div>
             <button className="text-sm text-blue-600 hover:underline">Cambiar contraseña</button>
           </div>
@@ -59,26 +62,26 @@ export default function Settings() {
       <div className="flex flex-row gap-6">
         {/* Empresa */}
         <div className="flex-1 bg-white p-6 rounded-2xl shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">Empresa</h2>
+          <h2 className="text-lg font-semibold mb-4">Información de Almacén</h2>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span>Nombre</span>
-              <span className="text-gray-600">Mi Empresa SAC</span>
+              <span>Almacén</span>
+              <span className="text-gray-600">{userData?.locName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>RUC</span>
-              <span className="text-gray-600">20567890123</span>
+              <span>Región</span>
+              <span className="text-gray-600">{userData?.locRegName}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>Dirección</span>
-              <span className="text-gray-600">Av. Principal 123</span>
+              <span className="text-gray-600">{userData?.locDir}</span>
             </div>
           </div>
         </div>
 
         {/* Sistema */}
-        <div className="flex-1 bg-white p-6 rounded-2xl shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">Sistema</h2>
+        <div className="flex-1  p-6 rounded-2xl  mb-6">
+          {/* <h2 className="text-lg font-semibold mb-4">Sistema</h2>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span>Moneda</span>
@@ -91,7 +94,7 @@ export default function Settings() {
               <span>Stock negativo permitido</span>
               <input type="checkbox" className="w-4 h-4" />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
