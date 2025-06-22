@@ -4,7 +4,8 @@ import ButtonAction from '../components/Buttons/ButtonAction'
 import { BiTransfer } from "react-icons/bi";
 import Table from '../components/Table/Table';
 import Modal from '../components/Modals/Modal';
-import { getTransfers, createTransfer, updateTransferStatus, getTransferById } from '../services/transferService';
+import { getTransfers, createTransfer, updateTransferStatus, getTransferById, getTransfersByOrigin } from '../services/transferService';
+import { sendConditionReport } from '../services/transferService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +14,9 @@ import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import { span, td, tr } from 'framer-motion/client';
 import TableDetails from '../components/Table/TableDetails';
 
-const theadText = ['Origin', 'Destiny', 'Transfer Date', 'Arrival Date', 'Status', 'Action'];
-const theadText_sparePart = ['Number Part', 'Description', 'Quantity'];
-const theadText_storage = ['Origin Storage - Province', 'Destiny Storage - Province']
+const theadText = ['Almacén de Origen', 'Almacén Destinatario', 'Día de Transferencia', 'Día de llegada', 'Estado', 'Acciones'];
+const theadText_sparePart = ['N° de Parte', 'Descripción', 'Cantidad'];
+const theadText_storage = ['Almacén de Origen - Provincia', 'Almacén Destinatario - Provincia']
 
 export default function Transfers() {
   const [transfers, setTransfers] = useState([]);
@@ -30,6 +31,11 @@ export default function Transfers() {
   const [spareParts, setSpareParts] = useState([]);
   const [errors, setErrors] = useState({ locReg: '', spareParts: ''});
 
+  const [transferSearchTerm, setTrasnferSearchTerm] = useState('');
+  const [filteredTransfers, setFilteredTransfers] = useState([]);
+
+  const [conditionReport, setConditionReport] = useState({ status: '', notes: '' });
+
   const { userData } = useAuth();
 
   const handleSparePartChange = (index, field, value) => {
@@ -40,6 +46,7 @@ export default function Transfers() {
 
   const handleCloseModal = () => {
     setModalOpen(false);
+    setSelectedTransfer(null);
 
     if(isCreateMode)
     {
@@ -49,11 +56,11 @@ export default function Transfers() {
     }
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchData = async () => {
       try {
         const [transferData, regionData, locationData] = await Promise.all([
-          getTransfers(),
+          getTransfersByOrigin(userData?.locId), // <-- cambio aquí
           getAllRegions(),
           getAllLocations()
         ]);
@@ -73,8 +80,38 @@ export default function Transfers() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (userData?.locId) fetchData();
+  }, [userData]); */
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [allTransfers, regionData, locationData] = await Promise.all([
+          getTransfers(), // ahora trae todas
+          getAllRegions(),
+          getAllLocations()
+        ]);
+
+        const filtered = allTransfers.filter(t =>
+          t.originLocation.idLoc === userData?.locId || t.destinyLocation.idLoc === userData?.locId
+        );
+
+        setTransfers(filtered);
+        setLocations(locationData);
+
+        const userLocation = locationData.find(loc => loc.idLoc === userData?.locId);
+        const userRegionId = userLocation?.idReg;
+        const filteredRegions = regionData.filter(reg => reg.idReg !== userRegionId);
+
+        setRegions(filteredRegions);
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userData?.locId) fetchData();
+  }, [userData]);
 
   useEffect(() => {
     if (selectedRegionId) {
@@ -85,8 +122,21 @@ export default function Transfers() {
     }
   }, [selectedRegionId, locations]);
 
+  useEffect(() => {
+      if (transferSearchTerm.trim() === '') {
+        setFilteredTransfers(transfers);
+      } else {
+        const lower = transferSearchTerm.toLowerCase();
+        const filtered = transfers.filter(t =>
+          t.destinyLocation.nameSt?.toLowerCase().includes(lower)
+        );
+        setFilteredTransfers(filtered);
+      }
+  }, [transferSearchTerm, transfers]);
+
   const openEditModal = async (transfer) => {
     const data = await getTransferById(transfer.idTransf);
+    console.log(data);
     setSelectedTransfer(data);
     setIsCreateMode(false);
     setModalOpen(true);
@@ -99,40 +149,89 @@ export default function Transfers() {
   };
 
   const handleSubmit = async () => {
-    const newErrors = {locReg: '', spareParts: ''}
-    let isValid = true;
+    if (isCreateMode)
+    {
+      const newErrors = {locReg: '', spareParts: ''}
+      let isValid = true;
 
-    if (!selectedRegionId) {
-      newErrors.locReg = 'Debe seleccionar una región.';
-      isValid = false;
-    }
+      if (!selectedRegionId) {
+        newErrors.locReg = 'Debe seleccionar una región.';
+        isValid = false;
+      }
 
-    if (spareParts.length < 1) {
-      newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
-      isValid = false;
-    }
+      if (spareParts.length < 1) {
+        newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
+        isValid = false;
+      }
 
-    setErrors(newErrors);
-
-    if (!isValid) return;
+      setErrors(newErrors);
+      if (!isValid) return;
+    };
+    const payload = {
+      originId: userData?.locId,
+      destinyId: filteredLocations[0]?.idLoc,
+      statusTransf: 'Pendiente',
+      detailTransfers: spareParts
+    };
 
     try {
       if (isCreateMode) {
-        const payload = {
-          originId: userData?.locId,
-          destinyId: filteredLocations[0]?.idLoc,
-          statusTransf: 'Pendiente',
-          detailTransfers: spareParts
-        };
-
         await createTransfer(payload);
       } else {
+        const { statusTransf, origin, destiny } = selectedTransfer;
+        const currentUserLocId = userData?.locId;
+
+        const originId = origin?.idLoc;
+        const destinyId = destiny?.idLoc;
+
+        const isOriginUser = currentUserLocId === originId;
+        const isDestinyUser = currentUserLocId === destinyId;
+
+        let canUpdate = false;
+
+        if (statusTransf === "Pendiente" && isOriginUser) {
+          canUpdate = true;
+        } else if (statusTransf === "En tránsito" && isDestinyUser) {
+          canUpdate = true;
+        } else if (statusTransf === "Entregado" && isDestinyUser) {
+          canUpdate = true;
+        }
+
+        if (!canUpdate) {
+          alert("No tienes permiso para actualizar esta transferencia.");
+          return;
+        }
+
+        if (statusTransf === "Entregado" && isDestinyUser) {
+          if (!conditionReport.status || !conditionReport.notes) {
+            alert("Debes seleccionar una condición y escribir una descripción antes de completar la transferencia.");
+            return;
+          }
+
+          // Aquí llamas a tu función para enviar el reporte
+          await sendConditionReport({
+            transferId: selectedTransfer.idTransf,
+            user: userData?.username, // o nombre completo si lo tienes
+            condition: conditionReport.status,
+            details: conditionReport.notes
+          });
+        }
+
         await updateTransferStatus(selectedTransfer.idTransf);
+        //await updateTransferStatus(selectedTransfer.idTransf);
       }
 
       setModalOpen(false);
-      const updatedTransfers = await getTransfers();
-      setTransfers(updatedTransfers);
+      /* const updatedTransfers = await getTransfersByOrigin(userData?.locId);
+      setTransfers(updatedTransfers); */
+      const allTransfers = await getTransfers();
+
+      const filtered = allTransfers.filter(t =>
+        t.originLocation.idLoc === userData?.locId || 
+        t.destinyLocation.idLoc === userData?.locId
+      );
+
+      setTransfers(filtered);
     } catch (error) {
       console.error('Error al enviar la transferencia:', error);
     }
@@ -279,9 +378,9 @@ export default function Transfers() {
               <button
                     onClick={handleSubmit}
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-                  >
-                    {isCreateMode ? 'Registrar' : 'Actualizar'}
-                  </button>
+              >
+                {isCreateMode ? 'Registrar' : 'Actualizar'}
+              </button>
             </>
           )}
           {!isCreateMode && (
@@ -325,17 +424,89 @@ export default function Transfers() {
                 renderRow={renderSparePartsRow}
               />
 
+              {/* {selectedTransfer?.statusTransf === "Entregado" && selectedTransfer?.destiny?.idLoc === userData?.locId && (
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2 text-sm">Reporte de condiciones</h4>
+                  <select
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    value={conditionReport.status}
+                    onChange={(e) => setConditionReport(prev => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="">Selecciona una condición</option>
+                    <option value="En orden">En orden</option>
+                    <option value="Con averías">Con averías</option>
+                  </select>
+                  <textarea
+                    className="w-full border px-3 py-2 rounded"
+                    rows="4"
+                    placeholder="Describe detalles de la condición del paquete..."
+                    value={conditionReport.notes}
+                    onChange={(e) => setConditionReport(prev => ({ ...prev, notes: e.target.value }))}
+                  ></textarea>
+                </div>
+              )}
+
               <hr />
               
-              {selectedTransfer?.statusTransf === "Completada"
-                ? <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
-                : <button
+              {selectedTransfer?.statusTransf === "Completada" ? (
+                <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
+              ) : selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.origin?.idLoc === userData?.locId ? (
+                <span className="text-sm text-blue-500 italic">La transferencia está en tránsito. Solo el destinatario puede completar esta transferencia.</span>
+              ) : (selectedTransfer?.statusTransf === "Pendiente" && selectedTransfer?.origin?.idLoc === userData?.locId) || 
+                  (selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.destiny?.idLoc === userData?.locId) ? (
+                <button
+                  onClick={handleSubmit}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                >
+                  Actualizar
+                </button>
+              ) : (
+                <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
+              )} */}
+              {selectedTransfer?.statusTransf === "Completada" ? (
+                <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
+              ) : selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.origin?.idLoc === userData?.locId ? (
+                <span className="text-sm text-blue-500 italic">La transferencia está en tránsito. Solo el destinatario puede completar esta transferencia.</span>
+              ) : selectedTransfer?.statusTransf === "Entregado" && selectedTransfer?.destiny?.idLoc === userData?.locId ? (
+                <>
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2 text-sm">Reporte de condiciones</h4>
+                    <select
+                      className="w-full border px-3 py-2 rounded mb-2"
+                      value={conditionReport.status}
+                      onChange={(e) => setConditionReport(prev => ({ ...prev, status: e.target.value }))}
+                    >
+                      <option value="">Selecciona una condición</option>
+                      <option value="En orden">En orden</option>
+                      <option value="Con averías">Con averías</option>
+                    </select>
+                    <textarea
+                      className="w-full border px-3 py-2 rounded"
+                      rows="4"
+                      placeholder="Describe detalles de la condición del paquete..."
+                      value={conditionReport.notes}
+                      onChange={(e) => setConditionReport(prev => ({ ...prev, notes: e.target.value }))}
+                    ></textarea>
+                  </div>
+
+                  <button
                     onClick={handleSubmit}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded mt-3"
                   >
-                    {isCreateMode ? 'Registrar' : 'Actualizar'}
+                    Enviar reporte y completar transferencia
                   </button>
-              }
+                </>
+              ) : (selectedTransfer?.statusTransf === "Pendiente" && selectedTransfer?.origin?.idLoc === userData?.locId) || 
+                  (selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.destiny?.idLoc === userData?.locId) ? (
+                <button
+                  onClick={handleSubmit}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                >
+                  Actualizar
+                </button>
+              ) : (
+                <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
+              )}
               
             </>
           )}
@@ -345,7 +516,7 @@ export default function Transfers() {
         <h1 className="text-xl font-bold mb-6">Transferencias</h1>
 
         <div className="flex justify-between items-center mb-4">
-          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar transferencia..." />
+          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por destinatario..." onChange={(e) => setTrasnferSearchTerm(e.target.value)} />
           <Button
             children="New Transfer"
             onclick={openCreateModal}
@@ -358,7 +529,7 @@ export default function Transfers() {
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <Table theadText={theadText} tbodyData={transfers} renderRow={renderTransferRow} />
+            <Table theadText={theadText} tbodyData={filteredTransfers} renderRow={renderTransferRow} />
           )}
         </div>
       </div>
