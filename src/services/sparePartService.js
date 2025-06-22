@@ -73,15 +73,12 @@ export const deleteSparePart = async (id) => {
     throw error;
   }
 };
-
-export const fetchMatchingParts = async (query) => {
-  try
-  {
-    const res = await fetch(`${API_URL}/search?query=${query}`);
-    const data = await res.json();
-    return data; // puedes usar esto para autocomplete
-  } catch (error) {
-    console.error(`Error al buscar el repuesto con numero ${query}:`, error);
-    throw error;
-  }
+export const fetchMatchingParts = async (query, locId) => {
+  const response = await axios.get(`${API_URL}/search`, {
+    params: {
+      query,
+      locId
+    }
+  });
+  return response.data;
 };
