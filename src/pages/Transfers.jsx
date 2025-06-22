@@ -38,6 +38,8 @@ export default function Transfers() {
 
   const { userData } = useAuth();
 
+  const isAdmin = userData?.roles === 'Jefe de Logística';
+
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
     updated[index][field] = value;
@@ -91,18 +93,27 @@ export default function Transfers() {
           getAllLocations()
         ]);
 
-        const filtered = allTransfers.filter(t =>
+        if (isAdmin) {
+          setTransfers(allTransfers);
+          setLocations(locationData);
+          setRegions(regionData);
+        } else
+        {
+          const filtered = allTransfers.filter(t =>
           t.originLocation.idLoc === userData?.locId || t.destinyLocation.idLoc === userData?.locId
-        );
+          );
 
-        setTransfers(filtered);
-        setLocations(locationData);
+          setTransfers(filtered);
+          setLocations(locationData);
 
-        const userLocation = locationData.find(loc => loc.idLoc === userData?.locId);
-        const userRegionId = userLocation?.idReg;
-        const filteredRegions = regionData.filter(reg => reg.idReg !== userRegionId);
+          const userLocation = locationData.find(loc => loc.idLoc === userData?.locId);
+          const userRegionId = userLocation?.idReg;
+          const filteredRegions = regionData.filter(reg => reg.idReg !== userRegionId);
 
-        setRegions(filteredRegions);
+          setRegions(filteredRegions);
+        }
+
+        
       } catch (error) {
         console.error('Error al cargar datos:', error);
       } finally {
@@ -110,7 +121,7 @@ export default function Transfers() {
       }
     };
 
-    if (userData?.locId) fetchData();
+    if (userData?.locId || isAdmin) fetchData();
   }, [userData]);
 
   useEffect(() => {
@@ -136,7 +147,6 @@ export default function Transfers() {
 
   const openEditModal = async (transfer) => {
     const data = await getTransferById(transfer.idTransf);
-    console.log(data);
     setSelectedTransfer(data);
     setIsCreateMode(false);
     setModalOpen(true);
@@ -463,50 +473,53 @@ export default function Transfers() {
               ) : (
                 <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
               )} */}
-              {selectedTransfer?.statusTransf === "Completada" ? (
-                <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
-              ) : selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.origin?.idLoc === userData?.locId ? (
-                <span className="text-sm text-blue-500 italic">La transferencia está en tránsito. Solo el destinatario puede completar esta transferencia.</span>
-              ) : selectedTransfer?.statusTransf === "Entregado" && selectedTransfer?.destiny?.idLoc === userData?.locId ? (
-                <>
-                  <div className="mt-4">
-                    <h4 className="font-semibold mb-2 text-sm">Reporte de condiciones</h4>
-                    <select
-                      className="w-full border px-3 py-2 rounded mb-2"
-                      value={conditionReport.status}
-                      onChange={(e) => setConditionReport(prev => ({ ...prev, status: e.target.value }))}
-                    >
-                      <option value="">Selecciona una condición</option>
-                      <option value="En orden">En orden</option>
-                      <option value="Con averías">Con averías</option>
-                    </select>
-                    <textarea
-                      className="w-full border px-3 py-2 rounded"
-                      rows="4"
-                      placeholder="Describe detalles de la condición del paquete..."
-                      value={conditionReport.notes}
-                      onChange={(e) => setConditionReport(prev => ({ ...prev, notes: e.target.value }))}
-                    ></textarea>
-                  </div>
+              {!isAdmin && (
+                selectedTransfer?.statusTransf === "Completada" ? (
+                  <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
+                ) : selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.origin?.idLoc === userData?.locId ? (
+                  <span className="text-sm text-blue-500 italic">La transferencia está en tránsito. Solo el destinatario puede completar esta transferencia.</span>
+                ) : selectedTransfer?.statusTransf === "Entregado" && selectedTransfer?.destiny?.idLoc === userData?.locId ? (
+                  <>
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-2 text-sm">Reporte de condiciones</h4>
+                      <select
+                        className="w-full border px-3 py-2 rounded mb-2"
+                        value={conditionReport.status}
+                        onChange={(e) => setConditionReport(prev => ({ ...prev, status: e.target.value }))}
+                      >
+                        <option value="">Selecciona una condición</option>
+                        <option value="En orden">En orden</option>
+                        <option value="Con averías">Con averías</option>
+                      </select>
+                      <textarea
+                        className="w-full border px-3 py-2 rounded"
+                        rows="4"
+                        placeholder="Describe detalles de la condición del paquete..."
+                        value={conditionReport.notes}
+                        onChange={(e) => setConditionReport(prev => ({ ...prev, notes: e.target.value }))}
+                      ></textarea>
+                    </div>
 
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded mt-3"
+                    >
+                      Enviar reporte y completar transferencia
+                    </button>
+                  </>
+                ) : (selectedTransfer?.statusTransf === "Pendiente" && selectedTransfer?.origin?.idLoc === userData?.locId) || 
+                    (selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.destiny?.idLoc === userData?.locId) ? (
                   <button
                     onClick={handleSubmit}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded mt-3"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
                   >
-                    Enviar reporte y completar transferencia
+                    Actualizar
                   </button>
-                </>
-              ) : (selectedTransfer?.statusTransf === "Pendiente" && selectedTransfer?.origin?.idLoc === userData?.locId) || 
-                  (selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.destiny?.idLoc === userData?.locId) ? (
-                <button
-                  onClick={handleSubmit}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-                >
-                  Actualizar
-                </button>
-              ) : (
-                <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
+                ) : (
+                  <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
+                )
               )}
+              
               
             </>
           )}
@@ -517,12 +530,14 @@ export default function Transfers() {
 
         <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por destinatario..." onChange={(e) => setTrasnferSearchTerm(e.target.value)} />
-          <Button
-            children="New Transfer"
-            onclick={openCreateModal}
-            primaryColor="bg-purple-600"
-            hoverColor="hover:bg-purple-700"
-          />
+          {!isAdmin && (
+            <Button
+              children="New Transfer"
+              onclick={openCreateModal}
+              primaryColor="bg-purple-600"
+              hoverColor="hover:bg-purple-700"
+            />
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">

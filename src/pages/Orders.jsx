@@ -30,6 +30,8 @@ export default function Orders() {
 
   const { userData } = useAuth();
 
+  const isAdmin = userData?.roles === 'Jefe de Logística';
+
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
     updated[index][field] = value;
@@ -66,7 +68,14 @@ export default function Orders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const data = await getOrdersByLocation(userData?.locId);
+        let data
+        if (isAdmin)
+        {
+          data = await getOrders();
+        } else
+        {
+          data = await getOrdersByLocation(userData?.locId);
+        }
         setOrders(data);
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -173,11 +182,11 @@ export default function Orders() {
       </td>
       <td>
         <ButtonAction
-          primaryColor={"bg-green-600"}
-          hoverColor={"hover:bg-green-700"}
-          icon={FaEye}
-          onclick={() => openEditModal(item)}
-        />
+            primaryColor={"bg-green-600"}
+            hoverColor={"hover:bg-green-700"}
+            icon={FaEye}
+            onclick={() => openEditModal(item)}
+          />
       </td>
     </tr>
   );
@@ -329,17 +338,16 @@ export default function Orders() {
               />
 
               <hr />
-              
-              {selectedOrder?.statusOrd === "Entregado"
-                ? <span className="items-center text-sm text-gray-400 italic">La orden ha sido completada</span>
-                : <button
-                    onClick={handleSubmit}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-                  >
-                    {isCreateMode ? 'Registrar' : 'Actualizar'}
-                  </button>
-              }
-              
+              {!isAdmin && (
+                  selectedOrder?.statusOrd === "Entregado"
+                  ? (<span className="items-center text-sm text-gray-400 italic">La orden ha sido completada</span>)
+                  : (<button
+                      onClick={handleSubmit}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+                    >
+                      {isCreateMode ? 'Registrar' : 'Actualizar'}
+                    </button>)
+              )}
             </>
           )}
         </div>
@@ -350,12 +358,14 @@ export default function Orders() {
 
         <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de orden..." onChange={(e) => setOrderSearchTerm(e.target.value)} />
-          <Button 
-            children={"New Order"} 
-            onclick={openCreateModal} 
-            primaryColor={"bg-green-600"} 
-            hoverColor={"hover:bg-green-700"} 
-          />
+          {!isAdmin && (
+            <Button 
+              children={"New Order"} 
+              onclick={openCreateModal} 
+              primaryColor={"bg-green-600"} 
+              hoverColor={"hover:bg-green-700"} 
+            />
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">

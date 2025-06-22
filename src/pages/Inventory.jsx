@@ -27,6 +27,8 @@ export default function Inventory() {
 
   const { userData } = useAuth();
 
+  const isAdmin = userData?.roles === 'Jefe de Logística';
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setNumberPart('');
@@ -56,7 +58,7 @@ export default function Inventory() {
     const fetchSpareParts = async () => {
       try {
         let data;
-        if (userData?.role === 'Admin') {
+        if (isAdmin) {
           data = await getAllSpareParts();
         } else {
           data = await getSparePartsByLocation(userData?.locId);
@@ -189,12 +191,14 @@ export default function Inventory() {
         ) : 'No stock'}
       </td> */}
       <td>
-        <ButtonAction
-          primaryColor={"bg-blue-600"}
-          hoverColor={"hover:bg-blue-700"}
-          icon={MdModeEditOutline}
-          onclick={() => openEditModal(item)}
-        />
+        {!isAdmin && (
+          <ButtonAction
+            primaryColor={"bg-blue-600"}
+            hoverColor={"hover:bg-blue-700"}
+            icon={MdModeEditOutline}
+            onclick={() => openEditModal(item)}
+          />
+        )}
       </td>
     </tr>
   );
@@ -288,7 +292,14 @@ export default function Inventory() {
 
         <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de parte..." onChange={(e) => setSearchTerm(e.target.value)} />
-          <Button children={"Agregar Repuesto"} onclick={() => openCreateModal()} primaryColor={"bg-blue-600"} hoverColor={"hover:bg-blue-700"} />
+          {!isAdmin && (
+            <Button
+              children={"Agregar Repuesto"}
+              onclick={() => openCreateModal()}
+              primaryColor={"bg-blue-600"}
+              hoverColor={"hover:bg-blue-700"}
+            />
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
