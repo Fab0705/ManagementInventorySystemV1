@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { FaEye, FaTrash } from "react-icons/fa";
-import { getOrders, getOrderById, createOrder, updateOrderStatus} from '../services/orderService';
+import { getOrders, getOrderById, createOrder, updateOrderStatus, getOrdersByLocation} from '../services/orderService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { useAuth } from '../context/AuthContext';
 import TableDetails from '../components/Table/TableDetails';
@@ -10,9 +10,9 @@ import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import Modal from '../components/Modals/Modal';
 import Table from '../components/Table/Table';
 
-const theadText = ['WO', 'Description', 'Date', 'Status', 'Action'];
-const theadText_sparePart = ['Number Part', 'Description', 'Quantity'];
-const theadText_order = ['Work Order', 'Description'];
+const theadText = ['WO', 'Descripción', 'Fecha realizada', 'Estado', 'Acciones'];
+const theadText_sparePart = ['N° de Parte', 'Descripción', 'Cantidad'];
+const theadText_order = ['Work Order', 'Descripción'];
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -24,6 +24,9 @@ export default function Orders() {
   const [orderNumberDigits, setOrderNumberDigits] = useState('');
   const [orderDescription, setOrderDescription] = useState('');
   const [errors, setErrors] = useState({ digits: '', description: '', spareParts: ''});
+
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [filteredOrders, setFilteredOrders] = useState([]);
 
   const { userData } = useAuth();
 
@@ -45,7 +48,7 @@ export default function Orders() {
     }
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchOrders = async () => {
       try {
         const data = await getOrders(); // getOrders ya devuelve response.data
@@ -58,7 +61,34 @@ export default function Orders() {
     };
 
     fetchOrders();
-  }, []);
+  }, []); */
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await getOrdersByLocation(userData?.locId);
+        setOrders(data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [userData]);
+
+  useEffect(() => {
+    if (orderSearchTerm.trim() === '') {
+      setFilteredOrders(orders);
+    } else {
+      const lower = orderSearchTerm.toLowerCase();
+      const filtered = orders.filter(o =>
+        o.workOrd?.toLowerCase().includes(lower)
+      );
+      setFilteredOrders(filtered);
+    }
+  }, [orderSearchTerm, orders]);
 
   const openEditModal = async (order) => {
     const data = await getOrderById(order.idOrd);    
@@ -74,27 +104,30 @@ export default function Orders() {
   };
 
   const handleSubmit = async () => {
-    const newErrors = { digits: '', description: '', spareParts: '' };
-    let isValid = true;
+    if (isCreateMode) 
+    {
+      const newErrors = { digits: '', description: '', spareParts: '' };
+      let isValid = true;
 
-    if (orderNumberDigits.length !== 9) {
-      newErrors.digits = 'Debe tener exactamente 9 dígitos numéricos.';
-      isValid = false;
-    }
+      if (orderNumberDigits.length !== 9) {
+        newErrors.digits = 'Debe tener exactamente 9 dígitos numéricos.';
+        isValid = false;
+      }
 
-    if (!orderDescription.trim()) {
-      newErrors.description = 'La descripción es obligatoria.';
-      isValid = false;
-    }
+      if (!orderDescription.trim()) {
+        newErrors.description = 'La descripción es obligatoria.';
+        isValid = false;
+      }
 
-    if (spareParts.length < 1) {
-      newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
-      isValid = false;
-    }
+      if (spareParts.length < 1) {
+        newErrors.spareParts = 'Debe agregar al menos 1 repuesto.';
+        isValid = false;
+      }
 
-    setErrors(newErrors);
+      setErrors(newErrors);
 
-    if (!isValid) return;
+      if (!isValid) return;
+    };
 
     try {
       if (isCreateMode) {
@@ -104,20 +137,20 @@ export default function Orders() {
           workOrd: fullOrderCode,
           descOrd: orderDescription,// ← deberías cambiar esto según lo que selecciones
           idLoc: userData?.locId, // ← igual, deberías hacer select para destino
-          statusOrd: 'Pendiente',
+          statusOrd: 'Entregado',
           detailOrders: spareParts
         };
 
         await createOrder(payload);
       } else {
-        await updateOrderStatus(selectedOrder.idOrd);
+        await updateOrderStatus(selectedOrder?.idOrd);
       }
 
       setModalOpen(false);
-      const updateOrders = await getOrders();
-      setTransfers(updateOrders);
+      const updateOrders = await getOrdersByLocation(userData?.locId);;
+      setOrders(updateOrders);
     } catch (error) {
-      console.error('Error al enviar la transferencia:', error);
+      console.error('Error al enviar la orden:', error);
     }
   };
 
@@ -219,6 +252,7 @@ export default function Orders() {
                   </div>
                 )}
                 placeholder="Buscar número de parte..."
+                locId={userData?.locId}
               />
 
               <div className="mt-4">
@@ -296,7 +330,7 @@ export default function Orders() {
 
               <hr />
               
-              {selectedOrder?.statusTransf === "Completada"
+              {selectedOrder?.statusOrd === "Entregado"
                 ? <span className="items-center text-sm text-gray-400 italic">La orden ha sido completada</span>
                 : <button
                     onClick={handleSubmit}
@@ -315,7 +349,7 @@ export default function Orders() {
         <h1 className="text-xl font-bold mb-6">Órdenes</h1>
 
         <div className="flex justify-between items-center mb-4">
-          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar orden o cliente..." />
+          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de orden..." onChange={(e) => setOrderSearchTerm(e.target.value)} />
           <Button 
             children={"New Order"} 
             onclick={openCreateModal} 
@@ -328,7 +362,7 @@ export default function Orders() {
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <Table theadText={theadText} tbodyData={orders} renderRow={renderOrderRow} />
+            <Table theadText={theadText} tbodyData={filteredOrders} renderRow={renderOrderRow} />
           )}
         </div>
       </div>
