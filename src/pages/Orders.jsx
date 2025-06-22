@@ -3,6 +3,7 @@ import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { FaEye, FaTrash } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus, getOrdersByLocation} from '../services/orderService';
+import { getAllLocations, getAllRegions } from '../services/dataService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { useAuth } from '../context/AuthContext';
 import TableDetails from '../components/Table/TableDetails';
@@ -27,6 +28,12 @@ export default function Orders() {
 
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
   const [filteredOrders, setFilteredOrders] = useState([]);
+
+  const [locations, setLocations] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const { userData } = useAuth();
 
@@ -87,7 +94,7 @@ export default function Orders() {
     fetchOrders();
   }, [userData]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (orderSearchTerm.trim() === '') {
       setFilteredOrders(orders);
     } else {
@@ -97,7 +104,57 @@ export default function Orders() {
       );
       setFilteredOrders(filtered);
     }
-  }, [orderSearchTerm, orders]);
+  }, [orderSearchTerm, orders]); */
+
+  useEffect(() => {
+    let filtered = [...orders];
+
+    // Filtro por número de orden
+    if (orderSearchTerm.trim() !== '') {
+      const lower = orderSearchTerm.toLowerCase();
+      filtered = filtered.filter(o =>
+        o.workOrd?.toLowerCase().includes(lower)
+      );
+    }
+
+    // Filtro por locación (solo si es admin)
+    if (isAdmin && selectedLocationId) {
+      filtered = filtered.filter(o => o.idLoc === selectedLocationId);
+    }
+
+    // Filtro por rango de fechas
+    if (startDate) {
+      const start = new Date(startDate);
+      filtered = filtered.filter(o => new Date(o.dateOrd) >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1); // incluir el día completo
+      filtered = filtered.filter(o => new Date(o.dateOrd) < end);
+    }
+
+    setFilteredOrders(filtered);
+  }, [orderSearchTerm, selectedLocationId, startDate, endDate, orders, isAdmin]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const [locs, regs] = await Promise.all([
+          getAllLocations(),
+          getAllRegions()
+        ]);
+        setLocations(locs);
+        setRegions(regs);
+      } catch (error) {
+        console.error('Error fetching filters:', error);
+      }
+    };
+
+    if (isAdmin) {
+      fetchFilters();
+    }
+  }, [isAdmin]);
 
   const openEditModal = async (order) => {
     const data = await getOrderById(order.idOrd);    
@@ -356,7 +413,7 @@ export default function Orders() {
       <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
         <h1 className="text-xl font-bold mb-6">Órdenes</h1>
 
-        <div className="flex justify-between items-center mb-4">
+        {/* <div className="flex justify-between items-center mb-4">
           <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de orden..." onChange={(e) => setOrderSearchTerm(e.target.value)} />
           {!isAdmin && (
             <Button 
@@ -364,6 +421,52 @@ export default function Orders() {
               onclick={openCreateModal} 
               primaryColor={"bg-green-600"} 
               hoverColor={"hover:bg-green-700"} 
+            />
+          )}
+        </div> */}
+        <div className="flex flex-wrap gap-4 items-center mb-4">
+
+          {isAdmin && (
+            <select
+              className="border px-3 py-2 rounded"
+              value={selectedLocationId}
+              onChange={(e) => setSelectedLocationId(e.target.value)}
+            >
+              <option value="">Todas las regiones</option>
+              {locations.map(loc => (
+                <option key={loc.idLoc} value={loc.idLoc}>
+                  {`${regions.find(r => r.idReg === loc.idReg)?.descReg || 'Región desconocida'}`}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <input
+            type="date"
+            className="border px-3 py-2 rounded"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+
+          <input
+            type="date"
+            className="border px-3 py-2 rounded"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+
+          <input
+            className="border px-3 py-2 rounded flex-1 min-w-[200px]"
+            placeholder="Buscar por número de orden..."
+            onChange={(e) => setOrderSearchTerm(e.target.value)}
+          />
+
+          {!isAdmin && (
+            <Button
+              children={"New Order"}
+              onclick={openCreateModal}
+              primaryColor={"bg-green-600"}
+              hoverColor={"hover:bg-green-700"}
             />
           )}
         </div>

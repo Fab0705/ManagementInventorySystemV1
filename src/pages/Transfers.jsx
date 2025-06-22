@@ -35,6 +35,11 @@ export default function Transfers() {
   const [filteredTransfers, setFilteredTransfers] = useState([]);
 
   const [conditionReport, setConditionReport] = useState({ status: '', notes: '' });
+  
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedFilterRegionId, setSelectedFilterRegionId] = useState('');
+  const [selectedOriginLocId, setSelectedOriginLocId] = useState('');
 
   const { userData } = useAuth();
 
@@ -57,38 +62,11 @@ export default function Transfers() {
       setSpareParts([]);
     }
   };
-
-  /* useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [transferData, regionData, locationData] = await Promise.all([
-          getTransfersByOrigin(userData?.locId), // <-- cambio aquí
-          getAllRegions(),
-          getAllLocations()
-        ]);
-
-        setTransfers(Array.isArray(transferData) ? transferData : []);
-        setLocations(locationData);
-
-        const userLocation = locationData.find(loc => loc.idLoc === userData?.locId);
-        const userRegionId = userLocation?.idReg;
-
-        const filteredRegions = regionData.filter(reg => reg.idReg !== userRegionId);
-        setRegions(filteredRegions);
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userData?.locId) fetchData();
-  }, [userData]); */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [allTransfers, regionData, locationData] = await Promise.all([
-          getTransfers(), // ahora trae todas
+          getTransfers(),
           getAllRegions(),
           getAllLocations()
         ]);
@@ -144,6 +122,37 @@ export default function Transfers() {
         setFilteredTransfers(filtered);
       }
   }, [transferSearchTerm, transfers]);
+
+  useEffect(() => {
+    let filtered = [...transfers];
+
+    if (transferSearchTerm.trim()) {
+      const lower = transferSearchTerm.toLowerCase();
+      filtered = filtered.filter(t =>
+        t.destinyLocation.nameSt?.toLowerCase().includes(lower)
+      );
+    }
+    if (isAdmin && selectedOriginLocId) {
+      filtered = filtered.filter(t => 
+        t.originLocation?.idLoc === selectedOriginLocId
+      );
+    }
+
+    if (startDate) {
+      filtered = filtered.filter(t =>
+        new Date(t.dateTransf) >= new Date(startDate)
+      );
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+      filtered = filtered.filter(t =>
+        new Date(t.dateTransf) < end
+      );
+    }
+
+    setFilteredTransfers(filtered);
+  }, [transfers, transferSearchTerm, startDate, endDate, selectedOriginLocId, isAdmin]);
 
   const openEditModal = async (transfer) => {
     const data = await getTransferById(transfer.idTransf);
@@ -228,12 +237,9 @@ export default function Transfers() {
         }
 
         await updateTransferStatus(selectedTransfer.idTransf);
-        //await updateTransferStatus(selectedTransfer.idTransf);
       }
 
       setModalOpen(false);
-      /* const updatedTransfers = await getTransfersByOrigin(userData?.locId);
-      setTransfers(updatedTransfers); */
       const allTransfers = await getTransfers();
 
       const filtered = allTransfers.filter(t =>
@@ -434,45 +440,6 @@ export default function Transfers() {
                 renderRow={renderSparePartsRow}
               />
 
-              {/* {selectedTransfer?.statusTransf === "Entregado" && selectedTransfer?.destiny?.idLoc === userData?.locId && (
-                <div className="mt-4">
-                  <h4 className="font-semibold mb-2 text-sm">Reporte de condiciones</h4>
-                  <select
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    value={conditionReport.status}
-                    onChange={(e) => setConditionReport(prev => ({ ...prev, status: e.target.value }))}
-                  >
-                    <option value="">Selecciona una condición</option>
-                    <option value="En orden">En orden</option>
-                    <option value="Con averías">Con averías</option>
-                  </select>
-                  <textarea
-                    className="w-full border px-3 py-2 rounded"
-                    rows="4"
-                    placeholder="Describe detalles de la condición del paquete..."
-                    value={conditionReport.notes}
-                    onChange={(e) => setConditionReport(prev => ({ ...prev, notes: e.target.value }))}
-                  ></textarea>
-                </div>
-              )}
-
-              <hr />
-              
-              {selectedTransfer?.statusTransf === "Completada" ? (
-                <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
-              ) : selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.origin?.idLoc === userData?.locId ? (
-                <span className="text-sm text-blue-500 italic">La transferencia está en tránsito. Solo el destinatario puede completar esta transferencia.</span>
-              ) : (selectedTransfer?.statusTransf === "Pendiente" && selectedTransfer?.origin?.idLoc === userData?.locId) || 
-                  (selectedTransfer?.statusTransf === "En tránsito" && selectedTransfer?.destiny?.idLoc === userData?.locId) ? (
-                <button
-                  onClick={handleSubmit}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-                >
-                  Actualizar
-                </button>
-              ) : (
-                <span className="text-sm text-gray-400 italic">No tienes permiso para actualizar esta transferencia</span>
-              )} */}
               {!isAdmin && (
                 selectedTransfer?.statusTransf === "Completada" ? (
                   <span className="text-sm text-gray-400 italic">La transferencia ha sido completada</span>
@@ -528,8 +495,48 @@ export default function Transfers() {
       <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
         <h1 className="text-xl font-bold mb-6">Transferencias</h1>
 
-        <div className="flex justify-between items-center mb-4">
-          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por destinatario..." onChange={(e) => setTrasnferSearchTerm(e.target.value)} />
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+          <input
+            type="text"
+            placeholder="Buscar por destinatario..."
+            className="border px-3 py-2 rounded w-1/3 min-w-[200px]"
+            onChange={(e) => setTrasnferSearchTerm(e.target.value)}
+          />
+
+          {isAdmin && (
+            <select
+              value={selectedOriginLocId}
+              onChange={(e) => setSelectedOriginLocId(e.target.value)}
+              className="border px-3 py-2 rounded min-w-[200px]"
+            >
+              <option value="">Todos los almacenes de origen</option>
+              {locations.map((loc) => {
+                const regionName = regions.find(r => r.idReg === loc.idReg)?.descReg || "Región desconocida";
+                return (
+                  <option key={loc.idLoc} value={loc.idLoc}>
+                    {regionName}
+                  </option>
+                );
+              })}
+            </select>
+          )}
+
+          <div className="flex gap-2 items-center">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+            <span>—</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+          </div>
+
           {!isAdmin && (
             <Button
               children="New Transfer"
