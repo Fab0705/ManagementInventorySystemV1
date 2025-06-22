@@ -9,6 +9,8 @@ import { IoSettingsOutline, IoSettingsSharp } from "react-icons/io5";
 import { BiPurchaseTag, BiSolidPurchaseTag, BiTransferAlt } from "react-icons/bi";
 import { HiOutlineDocumentReport, HiDocumentReport } from "react-icons/hi";
 import { IoIosNotificationsOutline, IoMdNotifications } from "react-icons/io";
+import { useAuth } from '../../context/AuthContext';
+import { FiLogOut } from "react-icons/fi";
 
 const itemsDesc = ['Dashboard', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Reports', 'Settings'];
 const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/reports', '/settings'];
@@ -18,23 +20,37 @@ const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt,
 export default function AsideBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userData, logout } = useAuth();
+
+  const isAdmin = userData?.roles === "Jefe de Logística";
+
+  const allowedIndexes = isAdmin ? [1, 2, 3] : [0, 1, 2, 3, 4, 5, 6];
 
   return (
-    <aside className='h-dvh w-1/7 shadow-xl'>
+    <aside className='h-dvh w-1/7 shadow-xl flex flex-col justify-between'>
+      <div>
         <h2 className='h-12 text-center content-center'>IDERKA</h2>
         <ul className='px-8'>
-            {itemsDesc.map((desc, index) => {
-              const isActive = location.pathname === routes[index];
-              const Icon = isActive ? itemsIcoFilled[index] : itemsIcoLight[index];
-              return  (
-                <li key={desc}>
-                  <AsideBarButton icon={Icon} onclick={() => navigate(routes[index])} isActive={isActive} >
-                    {desc}
-                  </AsideBarButton>
-                </li>
-              );
-            })}
+          {allowedIndexes.map((index) => {
+            const isActive = location.pathname === routes[index];
+            const Icon = isActive ? itemsIcoFilled[index] : itemsIcoLight[index];
+            return (
+              <li key={itemsDesc[index]}>
+                <AsideBarButton icon={Icon} onclick={() => navigate(routes[index])} isActive={isActive}>
+                  {itemsDesc[index]}
+                </AsideBarButton>
+              </li>
+            );
+          })}
         </ul>
+      </div>
+
+      {/* Cerrar sesión */}
+      <div className='px-8 mb-4'>
+        <AsideBarButton icon={FiLogOut} onclick={logout} isActive={false}>
+          Cerrar sesión
+        </AsideBarButton>
+      </div>
     </aside>
-  )
+  );
 }

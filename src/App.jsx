@@ -14,9 +14,11 @@ import SystemNotifications from './pages/SystemNotifications';
 //import './App.css'
 
 function App() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, userData } = useAuth();
 
   if (loading) return <div className="flex items-center justify-center h-screen">Cargando...</div>;
+
+  const isAdmin = userData?.roles === "Jefe de Logística";
 
   return (
     <Router>
@@ -24,9 +26,10 @@ function App() {
         <Route
           path="/login"
           element={
-            isAuthenticated ? <Navigate to="/" replace /> : <Login />
+            isAuthenticated ? <Navigate to={isAdmin ? "/inventory" : "/"} replace /> : <Login />
           }
         />
+
         <Route
           path="*"
           element={
@@ -36,7 +39,12 @@ function App() {
                 <div className="flex flex-col flex-1">
                   <NavBar />
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    {/* Redirección automática según el rol */}
+                    <Route
+                      path="/"
+                      element={<Navigate to={isAdmin ? "/inventory" : "/dashboard"} replace />}
+                    />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/transfers" element={<Transfers />} />
