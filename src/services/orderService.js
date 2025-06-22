@@ -13,6 +13,16 @@ export const getOrders = async () => {
   }
 };
 
+export const getOrdersByLocation = async (idLoc) => {
+  try {
+    const response = await axios.get(`${API_URL}/by-location/${idLoc}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error al obtener órdenes por localización:`, error);
+    throw error;
+  }
+};
+
 // ✅ Obtener una orden por ID
 export const getOrderById = async (id) => {
   try {
