@@ -57,6 +57,12 @@ export const updateSparePart = async (sparePartData) => {
   }
 };
 
+export const updateStock = async (idSpare, idLoc, quantity) => {
+  return await axios.put(`${API_URL}/${idSpare}/stock/${idLoc}?quantity=${quantity}`, {
+    headers: { 'Content-Type': 'application/json' }
+  });
+};
+
 // ✅ Eliminar un repuesto
 export const deleteSparePart = async (id) => {
   try {
