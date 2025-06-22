@@ -12,7 +12,7 @@ import { IoIosNotificationsOutline, IoMdNotifications } from "react-icons/io";
 import { useAuth } from '../../context/AuthContext';
 import { FiLogOut } from "react-icons/fi";
 
-const itemsDesc = ['Dashboard', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Reports', 'Settings'];
+const itemsDesc = ['Home', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Reports', 'Settings'];
 const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/reports', '/settings'];
 const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, IoIosNotificationsOutline, HiOutlineDocumentReport, IoSettingsOutline];
 const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, IoMdNotifications, HiDocumentReport, IoSettingsSharp];

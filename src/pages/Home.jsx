@@ -7,7 +7,6 @@ const datas = ['42,560', '$875,400', '12', '5']
 const descs = ['In Stock | All Locations', 'All Locations', 'Below-Minimun Quantity', 'Across All Locations']
 
 export default function Dashboard() {
-  const { logout } = useAuth();
   const { userData } = useAuth();
   return (
     <div className='bg-gray-100 w-full h-dvh p-6'>
@@ -16,9 +15,9 @@ export default function Dashboard() {
         <p>Email: {userData?.emails}</p>
         <p>ID Ubicación: {userData?.locId}</p>
         <p>Nombre Ubicación: {userData?.locName}</p> */}
-        <button onClick={logout}>Cerrar sesión</button>
-        <h1 className="text-xl font-bold mb-6">Dashboard</h1>
-        <div className="flex flex-wrap gap-6">
+        
+        <h1 className="text-xl font-bold mb-6">Bienvenido! {userData?.username}</h1>
+        {/* <div className="flex flex-wrap gap-6">
             {titles.map((desc, index) => {
                 const Data = datas[index];
                 const Desc = descs[index];
@@ -26,7 +25,7 @@ export default function Dashboard() {
                     <CardGeneralInfo key={index} title={desc} data={Data} desc={Desc} />
                 );
             })}
-        </div>
+        </div> */}
     </div>
   )
 }

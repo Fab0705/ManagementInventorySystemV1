@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate  } from 'react-router-
 import { useAuth } from './context/AuthContext';
 import NavBar from './components/Navbar/NavBar';
 import AsideBar from './components/AsideBar/AsideBar';
-import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import Transfers from './pages/Transfers';
@@ -42,9 +42,9 @@ function App() {
                     {/* Redirección automática según el rol */}
                     <Route
                       path="/"
-                      element={<Navigate to={isAdmin ? "/inventory" : "/dashboard"} replace />}
+                      element={<Navigate to={isAdmin ? "/inventory" : "/home"} replace />}
                     />
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/home" element={<Home />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/transfers" element={<Transfers />} />
