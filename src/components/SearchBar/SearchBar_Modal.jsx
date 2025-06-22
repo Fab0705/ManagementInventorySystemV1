@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaSearch } from "react-icons/fa";
 
-export default function SearchBar_Modal({ onResultSelect, fetchData, renderResultItem }) {
+export default function SearchBar_Modal({ onResultSelect, fetchData, renderResultItem, locId }) {
     const [input, setInput] = useState("");
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -12,7 +12,7 @@ export default function SearchBar_Modal({ onResultSelect, fetchData, renderResul
             if (input.trim()) {
                 setLoading(true);
                 try {
-                    const data = await fetchData(input);
+                    const data = await fetchData(input, locId);
                     setResults(data);
                     setShowDropdown(true);
                 } catch (error) {
