@@ -13,6 +13,16 @@ export const getTransfers = async () => {
   }
 };
 
+export const getTransfersByOrigin = async (idLoc) => {
+  try {
+    const response = await axios.get(`${API_URL}/by-origin/${idLoc}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error al obtener transferencias del origen ${idLoc}:`, error);
+    throw error;
+  }
+};
+
 // ✅ Obtener una transferencia por ID
 export const getTransferById = async (id) => {
   try {
@@ -42,6 +52,20 @@ export const updateTransferStatus = async (id) => {
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar estado de la transferencia ${id}:`, error);
+    throw error;
+  }
+};
+
+export const sendConditionReport = async (reportData) => {
+  try {
+    const response = await axios.post(`${API_URL}/email/sendReport`, reportData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al enviar el reporte de condiciones:', error);
     throw error;
   }
 };
