@@ -8,11 +8,12 @@ import { TbDashboard, TbDashboardFilled } from "react-icons/tb";
 import { IoSettingsOutline, IoSettingsSharp } from "react-icons/io5";
 import { BiPurchaseTag, BiSolidPurchaseTag, BiTransferAlt } from "react-icons/bi";
 import { HiOutlineDocumentReport, HiDocumentReport } from "react-icons/hi";
+import { IoIosNotificationsOutline, IoMdNotifications } from "react-icons/io";
 
-const itemsDesc = ['Dashboard', 'Inventory', 'Orders', 'Transfers', 'Reports', 'Settings'];
-const routes = ['/', '/inventory', '/orders', '/transfers', '/reports', '/settings'];
-const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, HiOutlineDocumentReport, IoSettingsOutline];
-const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, HiDocumentReport, IoSettingsSharp];
+const itemsDesc = ['Dashboard', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Reports', 'Settings'];
+const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/reports', '/settings'];
+const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, IoIosNotificationsOutline, HiOutlineDocumentReport, IoSettingsOutline];
+const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, IoMdNotifications, HiDocumentReport, IoSettingsSharp];
 
 export default function AsideBar() {
   const navigate = useNavigate();
