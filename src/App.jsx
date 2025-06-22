@@ -7,10 +7,10 @@ import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import Transfers from './pages/Transfers';
-import Purchases from './pages/Purchases';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import SystemNotifications from './pages/SystemNotifications';
 //import './App.css'
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/transfers" element={<Transfers />} />
-                    <Route path="/purchases" element={<Purchases />} />
+                    <Route path="/notifications" element={<SystemNotifications />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
