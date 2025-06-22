@@ -4,10 +4,10 @@ import ButtonAction from '../components/Buttons/ButtonAction';
 import { MdModeEditOutline } from "react-icons/md";
 import Table from '../components/Table/Table';
 import Modal from '../components/Modals/Modal';
-import { getAllSpareParts, getSparePartById, createSparePart, updateSparePart, getSparePartsByLocation } from '../services/sparePartService';
+import { getAllSpareParts, getSparePartById, createSparePart, updateSparePart, getSparePartsByLocation, updateStock } from '../services/sparePartService';
 import { useAuth } from '../context/AuthContext';
 
-const theadText = ['Number Part', 'Description', 'Rework', 'Stock', 'Action'];
+const theadText = ['Número de Parte', 'Descripción', 'Rework', 'Stock', 'Acciones'];
 
 export default function Inventory() {
   const [spareParts, setSpareParts] = useState([]);
@@ -22,6 +22,9 @@ export default function Inventory() {
   const [quantity, setQuantity] = useState(1);
   const [idSpare, setIdSpare] = useState(null);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredSpareParts, setFilteredSpareParts] = useState([]);
+
   const { userData } = useAuth();
 
   const handleCloseModal = () => {
@@ -34,7 +37,7 @@ export default function Inventory() {
     setErrors({ numberPart: '', descPart: '', rework: '', sparePartStocks: '' });
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchSpareParts = async () => {
       try {
         const data = await getAllSpareParts();
@@ -47,7 +50,42 @@ export default function Inventory() {
     };
 
     fetchSpareParts();
-  }, []);
+  }, []); */
+
+  useEffect(() => {
+    const fetchSpareParts = async () => {
+      try {
+        let data;
+        if (userData?.role === 'Admin') {
+          data = await getAllSpareParts();
+        } else {
+          data = await getSparePartsByLocation(userData?.locId);
+        }
+
+        setSpareParts(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching spare parts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userData) {
+      fetchSpareParts();
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredSpareParts(spareParts);
+    } else {
+      const lowerTerm = searchTerm.toLowerCase();
+      const filtered = spareParts.filter(sp =>
+        sp.numberPart.toLowerCase().includes(lowerTerm)
+      );
+      setFilteredSpareParts(filtered);
+    }
+  }, [searchTerm, spareParts]);
 
   const openEditModal = async (sparePart) => {
     const data = await getSparePartById(sparePart.idSpare);
@@ -107,12 +145,16 @@ export default function Inventory() {
       if (isCreateMode) {
         await createSparePart(payload);
       } else {
-        await updateSparePart({ ...payload, idSpare });
+        await updateStock(idSpare, userData.locId, quantity);
       }
 
       setModalOpen(false);
-      const updated = await getAllSpareParts();
-      setSpareParts(updated);
+
+      const updated = userData?.role === 'Admin'
+        ? await getAllSpareParts()
+        : await getSparePartsByLocation(userData?.locId);
+
+      setSpareParts(Array.isArray(updated) ? updated : []);
     } catch (err) {
       console.error('Error al guardar repuesto:', err);
     }
@@ -162,7 +204,7 @@ export default function Inventory() {
       <Modal
         isOpen={modalOpen}
         onClose={handleCloseModal}
-        title={isCreateMode ? "Nueva Orden" : "Detalles de la Orden"}
+        title={isCreateMode ? "Nuevo Repuesto" : "Detalles del repuesto"}
       >
         <div className="space-y-3">
           <hr />
@@ -177,6 +219,7 @@ export default function Inventory() {
                 onChange={(e) => setNumberPart(e.target.value)}
                 placeholder="Ej: 1234567890"
                 className={`w-full px-3 py-2 border rounded ${errors.numberPart ? 'border-red-500' : ''}`}
+                readOnly
               />
               {errors.numberPart && (
                 <p className="text-sm text-red-500 mt-1">{errors.numberPart}</p>
@@ -192,6 +235,7 @@ export default function Inventory() {
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
                 className={`w-full px-3 py-2 border rounded ${errors.quantity ? 'border-red-500' : ''}`}
+                
               />
               {errors.quantity && (
                 <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>
@@ -209,6 +253,7 @@ export default function Inventory() {
             placeholder="Máx. 200 caracteres"
             maxLength={200}
             className={`w-full px-3 py-2 border rounded ${errors.descPart && 'border-red-500'}`}
+            readOnly
           />
           <div className="text-sm text-right text-gray-500">
             {descPart.length}/200 caracteres
@@ -242,15 +287,15 @@ export default function Inventory() {
         <h1 className="text-xl font-bold mb-6">Repuestos</h1>
 
         <div className="flex justify-between items-center mb-4">
-          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar repuesto..." />
-          <Button children={"Add Product"} onclick={() => openCreateModal()} primaryColor={"bg-blue-600"} hoverColor={"hover:bg-blue-700"} />
+          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de parte..." onChange={(e) => setSearchTerm(e.target.value)} />
+          <Button children={"Agregar Repuesto"} onclick={() => openCreateModal()} primaryColor={"bg-blue-600"} hoverColor={"hover:bg-blue-700"} />
         </div>
 
         <div className="bg-white rounded-xl shadow p-4 overflow-auto">
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <Table theadText={theadText} tbodyData={spareParts} renderRow={renderProductRow} />
+            <Table theadText={theadText} tbodyData={filteredSpareParts} renderRow={renderProductRow} />
           )}
         </div>
       </div>
