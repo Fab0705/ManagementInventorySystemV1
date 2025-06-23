@@ -222,8 +222,8 @@ export default function Inventory() {
                 value={numberPart}
                 onChange={(e) => setNumberPart(e.target.value)}
                 placeholder="Ej: 1234567890"
+                maxLength={12}
                 className={`w-full px-3 py-2 border rounded ${errors.numberPart ? 'border-red-500' : ''}`}
-                readOnly
               />
               {errors.numberPart && (
                 <p className="text-sm text-red-500 mt-1">{errors.numberPart}</p>
@@ -254,7 +254,6 @@ export default function Inventory() {
             placeholder="Máx. 200 caracteres"
             maxLength={200}
             className={`w-full px-3 py-2 border rounded ${errors.descPart && 'border-red-500'}`}
-            readOnly
           />
           <div className="text-sm text-right text-gray-500">
             {descPart.length}/200 caracteres
