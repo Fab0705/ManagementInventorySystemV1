@@ -352,6 +352,7 @@ export default function Transfers() {
                   </div>
                 )}
                 placeholder="Buscar número de parte..."
+                locId={userData?.locId}
               />
 
               <div className="mt-4">
