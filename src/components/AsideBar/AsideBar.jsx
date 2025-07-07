@@ -12,10 +12,10 @@ import { IoIosNotificationsOutline, IoMdNotifications } from "react-icons/io";
 import { useAuth } from '../../context/AuthContext';
 import { FiLogOut } from "react-icons/fi";
 
-const itemsDesc = ['Home', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Reports', 'Settings'];
-const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/reports', '/settings'];
-const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, IoIosNotificationsOutline, HiOutlineDocumentReport, IoSettingsOutline];
-const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, IoMdNotifications, HiDocumentReport, IoSettingsSharp];
+const itemsDesc = ['Home', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Settings'];
+const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/settings'];
+const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, IoIosNotificationsOutline, IoSettingsOutline];
+const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, IoMdNotifications, IoSettingsSharp];
 
 export default function AsideBar() {
   const navigate = useNavigate();
