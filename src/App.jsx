@@ -34,24 +34,26 @@ function App() {
           path="*"
           element={
             isAuthenticated ? (
-              <div className="flex h-screen">
+              <div className="flex h-screen overflow-hidden">
                 <AsideBar />
                 <div className="flex flex-col flex-1">
                   <NavBar />
-                  <Routes>
-                    {/* Redirección automática según el rol */}
-                    <Route
-                      path="/"
-                      element={<Navigate to={isAdmin ? "/inventory" : "/home"} replace />}
-                    />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/inventory" element={<Inventory />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/transfers" element={<Transfers />} />
-                    <Route path="/notifications" element={<SystemNotifications />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
+                  <div className="overflow-y-auto flex-1 custom-scrollbar">
+                    <Routes>
+                      {/* Redirección automática según el rol */}
+                      <Route
+                        path="/"
+                        element={<Navigate to={isAdmin ? "/inventory" : "/home"} replace />}
+                      />
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/inventory" element={<Inventory />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/transfers" element={<Transfers />} />
+                      <Route path="/notifications" element={<SystemNotifications />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  </div>
                 </div>
               </div>
             ) : (
