@@ -12,7 +12,7 @@ import { IoIosNotificationsOutline, IoMdNotifications } from "react-icons/io";
 import { useAuth } from '../../context/AuthContext';
 import { FiLogOut } from "react-icons/fi";
 
-const itemsDesc = ['Home', 'Inventory', 'Orders', 'Transfers', 'System Notifications', 'Settings'];
+const itemsDesc = ['Dashboard', 'Inventory', 'Orders', 'Transfers', 'Notifications', 'Settings'];
 const routes = ['/', '/inventory', '/orders', '/transfers', '/notifications', '/settings'];
 const itemsIcoLight = [TbDashboard, MdOutlineInventory2, HiOutlineTruck, BiTransferAlt, IoIosNotificationsOutline, IoSettingsOutline];
 const itemsIcoFilled = [TbDashboardFilled, MdInventory2, HiTruck, BiTransferAlt, IoMdNotifications, IoSettingsSharp];
@@ -27,10 +27,10 @@ export default function AsideBar() {
   const allowedIndexes = isAdmin ? [1, 2, 3] : [0, 1, 2, 3, 4, 5, 6];
 
   return (
-    <aside className='h-dvh w-1/7 shadow-xl flex flex-col justify-between'>
+    <aside className='w-64 h-full bg-white dark:bg-gray-900 shadow-lg flex flex-col justify-between'>
       <div>
         <h2 className='h-12 text-center content-center'>IDERKA</h2>
-        <ul className='px-8'>
+        <ul className='px-8 flex flex-col gap-2'>
           {allowedIndexes.map((index) => {
             const isActive = location.pathname === routes[index];
             const Icon = isActive ? itemsIcoFilled[index] : itemsIcoLight[index];

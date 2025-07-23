@@ -4,11 +4,13 @@ export default function AsideBarButton({children, icon: Icon, onclick, isActive}
   return (
     <button
     onClick={onclick}
-    className={`w-full p-4 my-2 rounded-2xl flex gap-5 items-center cursor-pointer transition duration-200 ease-in-out hover:scale-105
-      ${isActive ? 'bg-sky-200 font-bold' : 'hover:bg-sky-100'}`}
+    className={`w-full flex items-center justify-between px-4 py-2 rounded-lg transition-all font-medium
+      ${isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800  dark:text-[#e3e5e5]'}`}
     >
-        <span>{Icon && <Icon size={18} />}</span>
-        {children}
+        <div className="flex items-center gap-5">
+          {Icon && <Icon size={18} />}
+          {children}
+        </div>
     </button>
   )
 }

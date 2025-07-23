@@ -1,24 +1,39 @@
 import React from 'react'
 import Avatar from '../Avatar/Avatar'
-import { FaRegQuestionCircle } from "react-icons/fa";
-import { FaRegBell } from "react-icons/fa";
-import { GoHistory } from "react-icons/go";
+import useDarkMode from '../../hooks/useDarkMode';
+import { useAuth } from '../../context/AuthContext';
+import { FaRegBell, FaRegQuestionCircle } from 'react-icons/fa';
+import { IoSunnyOutline, IoMoonOutline } from 'react-icons/io5';
 
 
 export default function NavBar() {
+  const [darkMode, toggleTheme] = useDarkMode();
+  const { userData } = useAuth();
+
   return (
-    <nav className='w-full flex justify-between size-12 items-center px-4 shadow-md'>
-        <ul className='flex gap-6 items-center'>
-            <li><GoHistory className='size-6'/></li>
-            <li>
-              <input type="text" placeholder='Search...' className="px-3 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-white bg-gray-200 w-80" />
-            </li>
-        </ul>
-        <ul className='flex gap-6 items-center '>
-            <li><FaRegBell className='size-6'/></li>
-            <li><FaRegQuestionCircle className='size-6'/></li>
-            <li><Avatar /></li>
-        </ul>
+    <nav className="w-full h-16 px-6 flex items-center justify-between shadow-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-white z-10">
+      <div className="text-lg font-semibold">Welcome, {userData?.roles} - {userData?.username}</div>
+      <div className="flex items-center gap-6">
+        <div
+          onClick={toggleTheme}
+          className={`w-12 h-6 flex items-center px-1 rounded-full cursor-pointer transition-colors duration-300
+            ${darkMode ? 'bg-violet-400' : 'bg-gray-300'}`}
+        >
+          <div
+            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300
+              ${darkMode ? 'translate-x-6' : 'translate-x-0'}`}
+          >
+            {darkMode ? (
+              <IoMoonOutline className="text-gray-600 text-sm m-[2px]" />
+            ) : (
+              <IoSunnyOutline className="text-gray-500 text-sm m-[2px]" />
+            )}
+          </div>
+        </div>
+        <FaRegBell className="text-xl" />
+        <FaRegQuestionCircle className="text-xl" />
+        {/* <Avatar /> */}
+      </div>
     </nav>
   )
 }
