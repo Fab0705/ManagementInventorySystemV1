@@ -5,6 +5,7 @@ import InputField from '../components/Buttons/InputField';
 import { loginAuth } from '../services/userService';
 import { useAuth } from '../context/AuthContext';
 import { FaGoogle, FaApple } from 'react-icons/fa';
+import SpinnerWait from '../components/UI/Spinner/SpinnerWait';
 
 export default function Login({  }) {
   const [user, setUser] = useState('');
@@ -12,9 +13,12 @@ export default function Login({  }) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     
     const loginData = { Username: user, Password: password };
     
@@ -22,62 +26,102 @@ export default function Login({  }) {
     try {
       const res = await loginAuth(loginData);
 
-      /* if (res.success) {
-        login();
+      if (res.success && res.data) {
+        login(res.data);
         navigate('/');
       } else {
         setError(res.error);
-      } */
-
-      if (res.success && res.data) {
-        login(res.data); // Aquí se pasa el objeto con los datos del usuario
-        navigate('/');
-      } else {
-        setError(res.data);
       }
     } catch (err) {
       setError('Error en el servidor');
+    } finally {
+      setLoading(false);
     }
   };
 
-
   return (
-    <div className="flex h-screen bg-gradient-to-r from-green-100-100 to-green-300">
-        {/* Left side - Login */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-6 md:px-16 bg-white">
-        <div className="max-w-md w-full space-y-6">
-          <h1 className="text-3xl font-bold">Welcome back!</h1>
-          <p className="text-gray-500">We are glad to see you again!<br />Please, enter your details</p>
+    <div className="flex min-h-screen bg-gray-50">
+      
+      <div className="m-auto w-full max-w-md px-4 py-8">
+        
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          
+          <div className="bg-gradient-to-r from-green-600 to-green-800 p-6 text-center">
+            <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
+            <p className="text-blue-100 mt-1">Please enter your credentials</p>
+          </div>
+          
+          
+          <div className="p-8">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+          
+              <div className="space-y-4">
+                <InputField 
+                  label="Username" 
+                  type="text" 
+                  placeholder="Enter your username" 
+                  maxlength="20" 
+                  value={user} 
+                  onChange={(e) => {setUser(e.target.value); setError('')}}
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500"
+                />
+                
+                <InputField 
+                  label="Password" 
+                  type="password" 
+                  placeholder="Enter your password" 
+                  maxlength="30" 
+                  value={password} 
+                  onChange={(e) => {setPassword(e.target.value); setError('')}}
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500"
+                />
+              </div>
 
           
-          {/* <div className="flex gap-4">
-            <SocialButton icon={<FaGoogle />} text="Log in with Google" />
-            <SocialButton icon={<FaApple />} text="Log in with Apple" />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center text-sm text-gray-600">
+                  <input 
+                    type="checkbox" 
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2">Remember me</span>
+                </label>
+                
+                <a href="#" className="text-sm text-green-600 hover:text-green-500 font-medium">
+                  Forgot Password?
+                </a>
+              </div>
+
+          
+              {error && (
+                <div className="rounded-md bg-red-50 p-3">
+                  <p className="text-sm text-red-600">*Incorrect credentials</p>
+                </div>
+              )}
+
+          
+              <button
+                type="submit"
+                disabled={loading} // <- Deshabilita cuando loading
+                className={`w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-900 transition-colors duration-200`}
+              >
+                {loading ? <SpinnerWait withText /> : 'Sign in'}
+              </button>
+            </form>
           </div>
-
-          <div className="flex items-center justify-center text-gray-400 text-sm">
-            <span className="border-t w-full"></span>
-            <span className="px-2">or</span>
-            <span className="border-t w-full"></span>
-          </div> */}
-
-          {/* Form */}
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <InputField label="Username" type="text" placeholder="Enter your username" maxlength="20" value={user} onChange={(e) => setUser(e.target.value)} />
-            <InputField label="Password" type="password" placeholder="Enter your password" maxlength="30" value={password} onChange={(e) => setPassword(e.target.value)} />
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="form-checkbox" />
-                Remember me
-              </label>
-              <a href="#" className="text-black font-medium">Forgot Password?</a>
-            </div>
-            
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <button className="w-full bg-black text-white py-2 rounded-xl hover:opacity-90 transition">Login</button>
-          </form>
+          
+          
+          {/* <SpinnerWait withText /> */}
+          <div className="bg-gray-50 px-6 py-4 text-center">
+            <p className="text-xs text-gray-500">
+              Don't have an account?{' '}
+              <a href="#" className="text-green-600 hover:text-green-500 font-medium">
+                Contact administrator
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
