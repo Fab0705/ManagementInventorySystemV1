@@ -1,1 +1,39 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+*{
+    @apply transition-colors duration-300
+}
+
+@theme{
+    --color-pagesBg-darkmode: #1A1B2F;
+    --color-cardBg-darkmode: #25253E; /*283046*/
+}
+
+@layer utilities {
+    .custom-button-color {
+        /*Ligth Mode Colors*/
+        @apply bg-[#3498DB];
+        @apply hover:bg-[#0C89DD];
+
+        /*Dark Mode Colors*/        
+        @apply dark:bg-[#A78BFA];
+        @apply dark:hover:bg-[#8E6BF7];
+    }
+
+    .custom-status-design {
+        @apply py-1;
+        @apply px-2;
+        @apply rounded-md;
+    }
+
+    .input-design {
+        @apply px-4 py-2 rounded-2xl
+            border border-gray-200 dark:border-gray-700
+            bg-white dark:bg-[#2d2d2d]
+            text-gray-900 dark:text-gray-100
+            placeholder-gray-500 dark:placeholder-gray-400
+            focus:outline-none focus:ring-2 focus:ring-blue-400/70
+            shadow-sm dark:shadow-none
+    }
+}
