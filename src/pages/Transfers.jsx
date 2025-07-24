@@ -5,13 +5,16 @@ import { BiTransfer } from "react-icons/bi";
 import Table from '../components/Table/Table';
 import Modal from '../components/Modals/Modal';
 import { getTransfers, createTransfer, updateTransferStatus, getTransferById, getTransfersByOrigin } from '../services/transferService';
+import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight} from "react-icons/md";
 import { sendConditionReport } from '../services/transferService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { useAuth } from '../context/AuthContext';
-import { FaTrash } from "react-icons/fa";
+import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaTrash } from "react-icons/fa";
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
+import usePagination from '../hooks/usePagination';
 import { span, td, tr } from 'framer-motion/client';
+import PageBackground from '../components/UI/Background/PageBackground';
 import TableDetails from '../components/Table/TableDetails';
 
 const theadText = ['Almacén de Origen', 'Almacén Destinatario', 'Día de Transferencia', 'Día de llegada', 'Estado', 'Acciones'];
@@ -44,6 +47,17 @@ export default function Transfers() {
   const { userData } = useAuth();
 
   const isAdmin = userData?.roles === 'Jefe de Logística';
+
+  const {
+    currentData,
+    currentPage,
+    totalPages,
+    rowsPerPage,
+    handleChangeRowsPerPage,
+    handlePrevPage,
+    handleNextPage,
+    setCurrentPage
+  } = usePagination(filteredTransfers);
 
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
@@ -254,11 +268,11 @@ export default function Transfers() {
   };
 
   const renderTransferRow = (item, index) => (
-    <tr key={index} className="border-b h-9 hover:bg-gray-50">
-      <td>{item.originLocation?.nameSt}</td>
-      <td>{item.destinyLocation?.nameSt}</td>
-      <td>{new Date(item.dateTransf).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-      <td>
+    <tr key={index} className="hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-50 dark:text-gray-200 transition-colors">
+      <td className='px-4 py-2'>{item.originLocation?.nameSt}</td>
+      <td className='px-4 py-2'>{item.destinyLocation?.nameSt}</td>
+      <td className='px-4 py-2'>{new Date(item.dateTransf).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+      <td className='px-4 py-2'>
         {item.arrivalDate
           ? new Date(item.arrivalDate).toLocaleString('es-PE', {
               day: '2-digit',
@@ -270,16 +284,16 @@ export default function Transfers() {
           : <span className="text-sm text-gray-400 italic">Aún no llega a su destino</span>
         }
       </td>
-      <td>
+      <td className='px-4 py-2'>
         <span className={
           item.statusTransf === 'Completada'
-            ? 'text-green-600'
-            : 'text-yellow-600'
+            ? 'text-white dark:bg-green-700 bg-green-600 custom-status-design'
+            : 'text-white dark:bg-yellow-700 bg-yellow-600 custom-status-design'
         }>
           {item.statusTransf}
         </span>
       </td>
-      <td>
+      <td className='px-4 py-2'>
         <ButtonAction
           primaryColor="bg-indigo-600"
           hoverColor="hover:bg-indigo-700"
@@ -493,14 +507,14 @@ export default function Transfers() {
           )}
         </div>
       </Modal>
-      <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-        <h1 className="text-xl font-bold mb-6">Transferencias</h1>
+      <PageBackground heightDefined={'min-h-full'}>
+        <h1 className="text-xl font-bold mb-6 dark:text-white">Transferencias</h1>
 
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <input
             type="text"
             placeholder="Buscar por destinatario..."
-            className="border px-3 py-2 rounded w-1/3 min-w-[200px]"
+            className="input-design w-1/3 min-w-[200px]"
             onChange={(e) => setTrasnferSearchTerm(e.target.value)}
           />
 
@@ -508,7 +522,7 @@ export default function Transfers() {
             <select
               value={selectedOriginLocId}
               onChange={(e) => setSelectedOriginLocId(e.target.value)}
-              className="border px-3 py-2 rounded min-w-[200px]"
+              className="input-design min-w-[200px]"
             >
               <option value="">Todos los almacenes de origen</option>
               {locations.map((loc) => {
@@ -527,35 +541,102 @@ export default function Transfers() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="border px-3 py-2 rounded"
+              className="input-design"
             />
             <span>—</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="border px-3 py-2 rounded"
+              className="input-design"
             />
           </div>
 
-          {!isAdmin && (
-            <Button
-              children="New Transfer"
-              onclick={openCreateModal}
-              primaryColor="bg-purple-600"
-              hoverColor="hover:bg-purple-700"
-            />
-          )}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Records per page
+            </span>
+            <select
+              value={rowsPerPage}
+              onChange={handleChangeRowsPerPage}
+              className="
+                px-3 py-1.5 rounded-md
+                border border-gray-300 dark:border-gray-600
+                bg-white dark:bg-[#2d2d2d]
+                text-gray-800 dark:text-gray-200
+                focus:outline-none focus:ring-2 focus:ring-blue-400/70
+                cursor-pointer
+              "
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          <div className="flex flex-row gap-4">
+            <div className="flex flex-row gap-1">
+              <button className='bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg text-xl' title='Export to PDF'>
+                <FaFilePdf />
+              </button>
+              <button className='bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg text-xl' title='Export to Excel'>
+                <FaFileExcel />
+              </button>
+              <button className='bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg text-xl' title='Export to CSV'>
+                <FaFileCsv />
+              </button>
+              <button className='bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-xl' title='Print the list'>
+                <FaPrint />
+              </button>
+            </div>
+            {!isAdmin && (
+              <Button
+                children="Nueva Transferencia"
+                onclick={openCreateModal}
+                primaryColor="bg-purple-600"
+                hoverColor="hover:bg-purple-700"
+              />
+            )}
+          </div>
+
+          
         </div>
 
-        <div className="bg-white rounded-xl shadow p-4 overflow-auto">
+          
+        <div className="overflow-x-auto rounded-lg shadow-sm border mb-2 border-gray-200 dark:border-gray-700">
           {loading ? (
-            <div>Loading...</div>
+            <div className='dark:text-white'>Loading...</div>
           ) : (
             <Table theadText={theadText} tbodyData={filteredTransfers} renderRow={renderTransferRow} />
           )}
         </div>
-      </div>
+        <div className="mt-4 flex justify-between items-center">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+            <div className="inline-flex items-center">
+              <MdKeyboardDoubleArrowLeft /> <span className="ml-1">Prev</span>
+            </div>
+            
+          </button>
+
+          <span className="text-sm dark:text-white">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          >
+            <div className="inline-flex items-center">
+              <span className="mr-1">Next</span> <MdKeyboardDoubleArrowRight />
+            </div>
+          </button>
+        </div>
+      </PageBackground>
     </>
   );
 }

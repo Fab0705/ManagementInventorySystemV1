@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import usePagination from '../hooks/usePagination';
 import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
-import { FaEye, FaTrash } from "react-icons/fa";
+import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaTrash, FaEye } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus, getOrdersByLocation} from '../services/orderService';
 import { getAllLocations, getAllRegions } from '../services/dataService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { useAuth } from '../context/AuthContext';
 import TableDetails from '../components/Table/TableDetails';
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
+import PageBackground from '../components/UI/Background/PageBackground';
 import Modal from '../components/Modals/Modal';
 import Table from '../components/Table/Table';
 
@@ -38,6 +40,17 @@ export default function Orders() {
   const { userData } = useAuth();
 
   const isAdmin = userData?.roles === 'Jefe de Logística';
+
+  const {
+    currentData,
+    currentPage,
+    totalPages,
+    rowsPerPage,
+    handleChangeRowsPerPage,
+    handlePrevPage,
+    handleNextPage,
+    setCurrentPage
+  } = usePagination(filteredOrders);
 
   const handleSparePartChange = (index, field, value) => {
     const updated = [...spareParts];
@@ -221,23 +234,23 @@ export default function Orders() {
   };
 
   const renderOrderRow = (item, index) => (
-    <tr key={index} className="border-b h-9 hover:bg-gray-50">
-      <td>{item.workOrd}</td>
-      <td>{item.descOrd}</td>
-      <td>{new Date(item.dateOrd).toLocaleString('es-PE', { 
+    <tr key={index} className="hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-50 dark:text-gray-200 transition-colors">
+      <td className='px-4 py-2'>{item.workOrd}</td>
+      <td className='px-4 py-2'>{item.descOrd}</td>
+      <td className='px-4 py-2'>{new Date(item.dateOrd).toLocaleString('es-PE', { 
         day: '2-digit', month: '2-digit', year: 'numeric', 
         hour: '2-digit', minute: '2-digit' 
       })}</td>
-      <td>
+      <td className='px-4 py-2'>
         <span className={
-          item.statusOrd === 'Pendiente' ? 'text-yellow-600' :
-          item.statusOrd === 'Entregado' ? 'text-green-600' :
+          item.statusOrd === 'Pendiente' ? 'text-white dark:bg-yellow-700 bg-yellow-600 custom-status-design' :
+          item.statusOrd === 'Entregado' ? 'text-white dark:bg-green-700 bg-green-600 custom-status-design' :
           'text-gray-600'
         }>
           {item.statusOrd}
         </span>
       </td>
-      <td>
+      <td className='px-4 py-2 '>
         <ButtonAction
             primaryColor={"bg-green-600"}
             hoverColor={"hover:bg-green-700"}
@@ -267,13 +280,13 @@ export default function Orders() {
           
           {isCreateMode && (
             <>
-              <hr />
-              <h3 className='font-bold italic mb-1'>Ingresar Work Order</h3>
+              <hr className='text-black dark:text-white my-4' />
+              <h3 className='font-bold italic mb-2 dark:text-white'>Ingresar Work Order</h3>
               <div className="flex gap-2 items-center mb-1">
                 <input
                   value="W"
                   disabled
-                  className="w-10 px-3 py-2 border rounded bg-gray-100 text-center font-bold"
+                  className="w-10 py-2 border rounded bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center font-bold"
                 />
                 <input
                   type="text"
@@ -284,29 +297,29 @@ export default function Orders() {
                     if (/^\d*$/.test(val)) setOrderNumberDigits(val); // solo números
                   }}
                   placeholder="9 dígitos numéricos"
-                  className={`flex-1 px-3 py-2 border rounded ${errors.digits && 'border-red-500'}`}
+                  className={`flex-1 input-design ${errors.digits && 'border-red-500'}`}
                 />
               </div>
 
               {errors.digits && <p className="text-sm text-red-500 mb-2">{errors.digits}</p>}
 
-              <h3 className='font-bold italic mb-1'>Describir orden</h3>
+              <h3 className='font-bold italic my-2 dark:text-white'>Describir orden</h3>
               <textarea
                 maxLength={200}
                 value={orderDescription}
                 onChange={(e) => setOrderDescription(e.target.value)}
                 rows={3}
                 placeholder="Describe brevemente esta orden (máx. 200 caracteres)"
-                className={`w-full px-3 py-2 border rounded ${errors.description && 'border-red-500'}`}
+                className={`w-full input-design ${errors.description && 'border-red-500'}`}
               />
-              <div className="text-sm text-right text-gray-500 mb-1">
+              <div className="text-sm text-right text-gray-500 dark:text-gray-300 mb-1">
                 {orderDescription.length}/200 caracteres
               </div>
 
               {errors.description && <p className="text-sm text-red-500 mb-2">{errors.description}</p>}
 
-              <hr />
-              <h3 className='font-bold italic mb-2'>Repuestos a transferir</h3>
+              <hr  className='text-black dark:text-white my-4' />
+              <h3 className='font-bold italic mb-2 dark:text-white'>Repuestos a transferir</h3>
               <SearchBar_Modal
                 fetchData={fetchMatchingParts}
                 onResultSelect={(item) => {
@@ -327,7 +340,7 @@ export default function Orders() {
                   tbodyData={spareParts}
                   renderRow={(sp, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="py-2 px-3">{sp.idSpare} - {sp.numPart}</td>
+                      <td className="py-2 px-3 dark:text-white">{sp.idSpare} - {sp.numPart}</td>
                       <td className="py-2 px-3">
                         <input
                           type="number"
@@ -336,7 +349,7 @@ export default function Orders() {
                           onChange={(e) =>
                             handleSparePartChange(index, 'quantity', parseInt(e.target.value))
                           }
-                          className="w-20 border px-2 py-1 rounded"
+                          className="w-20 input-design"
                         />
                       </td>
                       <td className="py-2 px-3">
@@ -409,21 +422,10 @@ export default function Orders() {
           )}
         </div>
       </Modal>
+      
+      <PageBackground heightDefined={'min-h-full'}>
+        <h1 className="text-xl font-bold mb-6 text-black dark:text-white">Órdenes</h1>
 
-      <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-        <h1 className="text-xl font-bold mb-6">Órdenes</h1>
-
-        {/* <div className="flex justify-between items-center mb-4">
-          <input className="border px-3 py-2 rounded w-1/3" placeholder="Buscar por número de orden..." onChange={(e) => setOrderSearchTerm(e.target.value)} />
-          {!isAdmin && (
-            <Button 
-              children={"New Order"} 
-              onclick={openCreateModal} 
-              primaryColor={"bg-green-600"} 
-              hoverColor={"hover:bg-green-700"} 
-            />
-          )}
-        </div> */}
         <div className="flex flex-wrap gap-4 items-center mb-4">
 
           {isAdmin && (
@@ -442,43 +444,81 @@ export default function Orders() {
           )}
 
           <input
+            className="flex-1 min-w-[200px] input-design"
+            placeholder="Buscar por número de orden..."
+            onChange={(e) => setOrderSearchTerm(e.target.value)}
+          />
+
+          <input
             type="date"
-            className="border px-3 py-2 rounded"
+            className="input-design"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
 
           <input
             type="date"
-            className="border px-3 py-2 rounded"
+            className="input-design"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
 
-          <input
-            className="border px-3 py-2 rounded flex-1 min-w-[200px]"
-            placeholder="Buscar por número de orden..."
-            onChange={(e) => setOrderSearchTerm(e.target.value)}
-          />
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Records per page
+            </span>
+            <select
+              value={rowsPerPage}
+              onChange={handleChangeRowsPerPage}
+              className="
+                px-3 py-1.5 rounded-md
+                border border-gray-300 dark:border-gray-600
+                bg-white dark:bg-[#2d2d2d]
+                text-gray-800 dark:text-gray-200
+                focus:outline-none focus:ring-2 focus:ring-blue-400/70
+                cursor-pointer
+              "
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
 
-          {!isAdmin && (
-            <Button
-              children={"New Order"}
-              onclick={openCreateModal}
-              primaryColor={"bg-green-600"}
-              hoverColor={"hover:bg-green-700"}
-            />
-          )}
+          <div className="flex flex-row gap-4">
+            <div className="flex flex-row gap-1">
+              <button className='bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg text-xl' title='Export to PDF'>
+                <FaFilePdf />
+              </button>
+              <button className='bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg text-xl' title='Export to Excel'>
+                <FaFileExcel />
+              </button>
+              <button className='bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg text-xl' title='Export to CSV'>
+                <FaFileCsv />
+              </button>
+              <button className='bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-xl' title='Print the list'>
+                <FaPrint />
+              </button>
+            </div>
+            {!isAdmin && (
+              <Button
+                children={"Nueva Orden"}
+                onclick={openCreateModal}
+                primaryColor={"bg-green-600"}
+                hoverColor={"hover:bg-green-700"}
+              />
+            )}
+          </div>
         </div>
-
-        <div className="bg-white rounded-xl shadow p-4 overflow-auto">
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
-            <Table theadText={theadText} tbodyData={filteredOrders} renderRow={renderOrderRow} />
-          )}
-        </div>
-      </div>
+          <div className="overflow-x-auto rounded-lg shadow-sm border mb-2 border-gray-200 dark:border-gray-700">
+            {loading ? (
+              <div className='dark:text-white'>Loading...</div>
+            ) : (
+              <Table theadText={theadText} tbodyData={filteredOrders} renderRow={renderOrderRow} />
+            )}
+          </div>
+        
+      </PageBackground>
     </>
   );
 }
