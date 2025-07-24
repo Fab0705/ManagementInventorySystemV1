@@ -31,23 +31,26 @@ export default function SearchBar_Modal({ onResultSelect, fetchData, renderResul
 
   return (
     <div className="relative w-full">
-      <div className="input-wrapper flex items-center border px-3 py-2 rounded bg-white">
-        <FaSearch className="text-gray-500 mr-2" />
+      <div className="input-wrapper flex items-center border px-3 py-2 rounded-2xl bg-white dark:bg-[#2d2d2d] dark:border-gray-600">
+        <FaSearch className="text-gray-500 dark:text-gray-300 mr-2" />
         <input
           type="text"
-          placeholder="Type to search..."
+          placeholder="Ingresa el numero de parte..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full outline-none"
+          onChange={(e) => {
+            const val = e.target.value;
+            if (/^\d*$/.test(val)) setInput(val);
+          }}
+          className="w-full outline-none dark:text-white"
         />
       </div>
 
       {showDropdown && results.length > 0 && (
-        <ul className="absolute z-10 w-full mt-1 bg-white border rounded shadow max-h-60 overflow-y-auto">
+        <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-[#2d2d2d] dark:text-white border dark:border-gray-600 rounded shadow max-h-60 overflow-y-auto">
           {results.map((item, idx) => (
             <li
               key={idx}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 cursor-pointer"
               onClick={() => {
                 onResultSelect(item);
                 setInput("");
