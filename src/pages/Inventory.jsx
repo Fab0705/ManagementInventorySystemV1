@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Button from '../components/Buttons/Button';
 import ButtonAction from '../components/Buttons/ButtonAction';
 import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight, MdModeEditOutline, MdDelete } from "react-icons/md";
-import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel } from "react-icons/fa";
+import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaEye } from "react-icons/fa";
 import Table from '../components/Table/Table';
 import Modal from '../components/Modals/Modal';
 import { getAllSpareParts, getSparePartById, createSparePart, updateSparePart, getSparePartsByLocation, updateStock } from '../services/sparePartService';
@@ -205,14 +205,12 @@ export default function Inventory() {
           ) : 'No stock'}
       </td>      
       <td className="px-4 py-2">
-        {!isAdmin && (
-          <ButtonAction
+        <ButtonAction
             primaryColor={"bg-blue-600"}
             hoverColor={"hover:bg-blue-700"}
-            icon={MdModeEditOutline}
+            icon={!isAdmin ? MdModeEditOutline : FaEye}
             onclick={() => openEditModal(item)}
           />
-        )}
       </td>
     </tr>
   );
@@ -237,8 +235,8 @@ export default function Inventory() {
                 onChange={(e) => {setNumberPart(e.target.value)}}
                 placeholder="Ej: 1234567890"
                 maxLength={12}
-                /* className={`w-full px-3 py-2 border rounded ${errors.numberPart ? 'border-red-500' : ''}`} */
                 className={`w-full input-design ${errors.numberPart ? 'border-red-500' : ''}`}
+                disabled={isAdmin}
               />
               {errors.numberPart && (
                 <p className="text-sm text-red-500 mt-1">{errors.numberPart}</p>
@@ -252,9 +250,8 @@ export default function Inventory() {
                 min={1}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
-                /* className={`w-full px-3 py-2 border rounded ${errors.quantity ? 'border-red-500' : ''}`} */
                 className={`w-full input-design ${errors.numberPart ? 'border-red-500' : ''}`}
-                
+                disabled={isAdmin}
               />
               {errors.quantity && (
                 <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>
@@ -269,8 +266,8 @@ export default function Inventory() {
             rows={3}
             placeholder="Máx. 200 caracteres"
             maxLength={200}
-            /* className={`w-full px-3 py-2 border rounded ${errors.descPart && 'border-red-500'}`} */
             className={`w-full input-design ${errors.numberPart ? 'border-red-500' : ''}`}
+            disabled={isAdmin}
           />
           <div className="text-sm text-right text-gray-500">
             {descPart.length}/200 caracteres
@@ -278,23 +275,28 @@ export default function Inventory() {
           {errors.descPart && <p className="text-sm text-red-500">{errors.descPart}</p>}
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="rework" className="font-medium text-black dark:text-white">¿Es rework? <span className='italic text-gray-400 dark:text-gray-500'>(Si no es rework, no marcarlo)</span></label>
+            <label htmlFor="rework" className="font-medium text-black dark:text-white">¿Es rework? {!isAdmin && (<span className='italic text-gray-400 dark:text-gray-500'>(Si no es rework, no marcarlo)</span>)}</label>
             <input
               type="checkbox"
               checked={rework}
               onChange={(e) => setRework(e.target.checked)}
               id="rework"
               className='h-5 w-5 transition-all cursor-pointer'
+              disabled={isAdmin}
             />
           </div>
 
-          <hr className='text-black dark:text-white my-4' />
-          <button
-            onClick={handleSubmit}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-          >
-            {isCreateMode ? 'Registrar' : 'Actualizar'}
-          </button>
+          {!isAdmin && (
+            <>
+              <hr className='text-black dark:text-white my-4' />
+              <button
+                onClick={handleSubmit}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+              >
+                {isCreateMode ? 'Registrar' : 'Actualizar'}
+              </button>
+            </>
+          )}
         </div>
       </Modal>
       <PageBackground heightDefined={'min-h-full'}>
