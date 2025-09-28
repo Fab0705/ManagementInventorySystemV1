@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import usePagination from '../hooks/usePagination';
 import Button from '../components/Buttons/Button'
 import ButtonAction from '../components/Buttons/ButtonAction';
+import { MdKeyboardDoubleArrowLeft, MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaTrash, FaEye } from "react-icons/fa";
 import { getOrders, getOrderById, createOrder, updateOrderStatus, getOrdersByLocation} from '../services/orderService';
 import { getAllLocations, getAllRegions } from '../services/dataService';
@@ -514,10 +515,35 @@ export default function Orders() {
             {loading ? (
               <div className='dark:text-white'>Loading...</div>
             ) : (
-              <Table theadText={theadText} tbodyData={filteredOrders} renderRow={renderOrderRow} />
+              <Table theadText={theadText} tbodyData={currentData} renderRow={renderOrderRow} />
             )}
           </div>
-        
+          <div className="mt-4 flex justify-between items-center">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              <div className="inline-flex items-center">
+                <MdKeyboardDoubleArrowLeft /> <span className="ml-1">Prev</span>
+              </div>
+              
+            </button>
+  
+            <span className="text-sm dark:text-white">
+              Page {currentPage} of {totalPages}
+            </span>
+  
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            >
+              <div className="inline-flex items-center">
+                <span className="mr-1">Next</span> <MdKeyboardDoubleArrowRight />
+              </div>
+            </button>
+          </div>
       </PageBackground>
     </>
   );

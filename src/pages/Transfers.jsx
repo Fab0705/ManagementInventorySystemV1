@@ -10,7 +10,7 @@ import { sendConditionReport } from '../services/transferService';
 import { fetchMatchingParts } from '../services/sparePartService';
 import { getAllRegions, getAllLocations } from '../services/dataService';
 import { useAuth } from '../context/AuthContext';
-import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaTrash } from "react-icons/fa";
+import { FaFileCsv, FaFilePdf, FaPrint, FaFileExcel, FaTrash, FaEye } from "react-icons/fa";
 import SearchBar_Modal from '../components/SearchBar/SearchBar_Modal';
 import usePagination from '../hooks/usePagination';
 import { span, td, tr } from 'framer-motion/client';
@@ -297,7 +297,7 @@ export default function Transfers() {
         <ButtonAction
           primaryColor="bg-indigo-600"
           hoverColor="hover:bg-indigo-700"
-          icon={BiTransfer}
+          icon={!isAdmin ? BiTransfer : FaEye}
           onclick={() => openEditModal(item)}
         />
       </td>
@@ -607,7 +607,7 @@ export default function Transfers() {
           {loading ? (
             <div className='dark:text-white'>Loading...</div>
           ) : (
-            <Table theadText={theadText} tbodyData={filteredTransfers} renderRow={renderTransferRow} />
+            <Table theadText={theadText} tbodyData={currentData} renderRow={renderTransferRow} />
           )}
         </div>
         <div className="mt-4 flex justify-between items-center">
