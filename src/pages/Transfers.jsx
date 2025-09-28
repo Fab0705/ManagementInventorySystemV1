@@ -416,8 +416,8 @@ export default function Transfers() {
           )}
           {!isCreateMode && (
             <>
-              <hr />
-              <div className="flex flex-row justify-around">
+              <hr className='dark:text-white' />
+              <div className="flex flex-row justify-around dark:text-white">
                 <span>
                   <p><strong>Día de transferencia:</strong></p>
                   {selectedTransfer?.dateTransf &&
@@ -438,17 +438,17 @@ export default function Transfers() {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
-                    }) : <span className="text-sm text-gray-400 italic">Aún no llega a su destino</span>}
+                    }) : <span className="text-sm text-gray-400 italic dark:text-white">Aún no llega a su destino</span>}
                 </span>
               </div>
-              <h3 className='font-bold text-center italic mb-1'>Almacenes involucrados</h3>
+              <h3 className='font-bold text-center italic mb-1 dark:text-white'>Almacenes involucrados</h3>
               <TableDetails theadText={theadText_storage}>
                 <tr className='border-b h-9 hover:bg-gray-50 text-center'>
                   <td>{selectedTransfer?.origin?.nameSt} - {selectedTransfer?.origin?.region}</td>
                   <td>{selectedTransfer?.destiny?.nameSt} - {selectedTransfer?.destiny?.region}</td>
                 </tr>
               </TableDetails>
-              <h3 className='font-bold text-center italic mb-1'>Repuestos transferidos</h3>
+              <h3 className='font-bold text-center italic mb-1 dark:text-white'>Repuestos transferidos</h3>
               <TableDetails
                 theadText={theadText_sparePart}
                 tbodyData={selectedTransfer?.spareParts || []}

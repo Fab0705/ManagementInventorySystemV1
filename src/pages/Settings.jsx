@@ -1,26 +1,19 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext';
+import PageBackground from '../components/UI/Background/PageBackground';
 
 export default function Settings() {
   const { userData } = useAuth();
 
   return (
-    <div className="bg-gray-100 w-full h-dvh p-6 overflow-y-auto">
-      <h1 className="text-xl font-bold mb-6">Settings</h1>
+    <PageBackground heightDefined={'min-h-full'}>
+      <h1 className="text-xl font-bold mb-6 dark:text-white">Settings</h1>
 
       <div className="flex flex-row gap-6 mb-6">
         {/* Personalización */}
         <div className="flex-1 bg-white p-6 rounded-2xl shadow mb-6">
           <h2 className="text-lg font-semibold mb-4">Personalización</h2>
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span>Tema</span>
-              <select className="p-1 border rounded">
-                <option>Claro</option>
-                <option>Oscuro</option>
-                <option>Sistema</option>
-              </select>
-            </div>
             <div className="flex justify-between items-center">
               <span>Idioma</span>
               <select className="p-1 border rounded">
@@ -97,6 +90,6 @@ export default function Settings() {
           </div> */}
         </div>
       </div>
-    </div>
+    </PageBackground>
   );
 }

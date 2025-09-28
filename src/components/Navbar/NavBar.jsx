@@ -12,7 +12,7 @@ export default function NavBar() {
 
   return (
     <nav className="w-full h-16 px-6 flex items-center justify-between shadow-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-white z-10">
-      <div className="text-lg font-semibold">Welcome, {userData?.roles} - {userData?.username}</div>
+      <div className="text-lg font-semibold">Bienvenido, {userData?.roles} - {userData?.username}</div>
       <div className="flex items-center gap-6">
         <div
           onClick={toggleTheme}

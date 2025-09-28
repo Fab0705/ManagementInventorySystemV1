@@ -10,7 +10,7 @@ export default function TableDetails({ theadText, tbodyData = [], renderRow, chi
           ))}
         </tr>
       </thead>
-      <tbody>
+      <tbody className="bg-gray-300 dark:bg-gray-800 border-b text-black dark:text-white">
         {children ? children : tbodyData.map((item, index) => renderRow(item, index))}
       </tbody>
     </table>

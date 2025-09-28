@@ -262,7 +262,7 @@ export default function Orders() {
   );
 
   const renderSparePartsRow = (item, index) => (
-    <tr key={index} className='border-b h-9 hover:bg-gray-50 text-center'>
+    <tr key={index} className='border-b h-9 hover:bg-gray-50 dark:hover:bg-gray-700 text-center'>
       <td>{item.numberPart}</td>
       <td>{item.descPart}</td>
       <td>{item.quantity}</td>
@@ -339,7 +339,7 @@ export default function Orders() {
                   theadText={["N° Parte", "Cantidad", "Acciones"]}
                   tbodyData={spareParts}
                   renderRow={(sp, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
+                    <tr key={index} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="py-2 px-3 dark:text-white">{sp.idSpare} - {sp.numPart}</td>
                       <td className="py-2 px-3">
                         <input
@@ -381,8 +381,8 @@ export default function Orders() {
           )}
           {!isCreateMode && (
             <>
-              <hr />
-              <span className='flex flex-row justify-between'>
+              <hr className='dark:text-white' />
+              <span className='flex flex-row justify-between dark:text-white'>
                   <p><strong>Fecha realizada la Orden:</strong></p>
                   {selectedOrder?.dateOrd &&
                       new Date(selectedOrder.dateOrd).toLocaleString('es-PE', {
@@ -393,21 +393,21 @@ export default function Orders() {
                         minute: '2-digit'
                   })}
               </span>
-              <h3 className='font-bold text-center italic mb-1'>Descripción</h3>
+              <h3 className='font-bold text-center italic mb-1 dark:text-white'>Descripción</h3>
               <TableDetails theadText={theadText_order}>
-                <tr className='border-b h-9 hover:bg-gray-50 text-center'>
+                <tr className='border-b h-9 hover:bg-gray-50 dark:hover:bg-gray-700 text-center'>
                   <td>{selectedOrder?.workOrd}</td>
                   <td>{selectedOrder?.descOrd}</td>
                 </tr>
               </TableDetails>
-              <h3 className='font-bold text-center italic mb-1'>Repuestos solicitados</h3>
+              <h3 className='font-bold text-center italic mb-1 dark:text-white'>Repuestos solicitados</h3>
               <TableDetails
                 theadText={theadText_sparePart}
                 tbodyData={selectedOrder?.spareParts || []}
                 renderRow={renderSparePartsRow}
               />
 
-              <hr />
+              <hr className='dark:text-white' />
               {!isAdmin && (
                   selectedOrder?.statusOrd === "Entregado"
                   ? (<span className="items-center text-sm text-gray-400 italic">La orden ha sido completada</span>)
