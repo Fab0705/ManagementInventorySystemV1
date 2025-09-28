@@ -478,7 +478,7 @@ export default function Dashboard() {
 
   //LINE CHART LOGIC
   useEffect(() => {
-    const data = buildChartData(orders, transfers, selectedMonth);
+    const data = buildChartData(ordersDataChart, transfersDataChart, selectedMonth);
     setData(data);
   }, [orders, transfers, selectedMonth]);
 
