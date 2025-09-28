@@ -43,7 +43,7 @@ function App() {
                       {/* Redirección automática según el rol */}
                       <Route
                         path="/"
-                        element={<Navigate to={isAdmin ? "/inventory" : "/home"} replace />}
+                        element={<Navigate to="/home" replace />}
                       />
                       <Route path="/home" element={<Home />} />
                       <Route path="/inventory" element={<Inventory />} />
